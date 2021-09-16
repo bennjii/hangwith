@@ -61,7 +61,7 @@ const Home: NextPage = () => {
 			}
 
 			{
-				client?.connected ? 
+				client?.room_id ? 
 				<button onClick={() => hangUp()}>Leave Room</button>
 				:
 				<div>
