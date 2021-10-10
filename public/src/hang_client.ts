@@ -1,8 +1,20 @@
-import { supabase } from "./client";
 import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useState } from "react";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-export const useHangClient = (configuration: any) => {
+const default_config = {
+    iceServers: [
+        {
+            urls: [
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+            ],
+        },
+    ],
+    iceCandidatePoolSize: 10,
+};
+
+export const useHangClient = (supabase_client: SupabaseClient, configuration?: any) => {
     const [ client, setClient ] = useState<{
         config: any,
         localStream: MediaStream,
@@ -11,7 +23,7 @@ export const useHangClient = (configuration: any) => {
         room_id: any,
         connected: boolean
     }>({
-        config: configuration,
+        config: configuration  ? configuration : default_config,
         //@ts-expect-error
         localStream: null,
         //@ts-expect-error
@@ -29,11 +41,9 @@ export const useHangClient = (configuration: any) => {
                     video: true,
                     audio: true
                 }).then((stream: MediaStream) => {
-                    // client.localStream = stream;
                     setClient({ ...client, localStream: stream });
                 });
             }else {
-                // client.localStream = new MediaStream();
                 setClient({ ...client, localStream: new MediaStream() });
             }
         }   
@@ -46,7 +56,7 @@ export const useHangClient = (configuration: any) => {
         registerPeerConnectionListeners();
 
         const room_id = 
-            await supabase
+            await supabase_client
                 .from('rooms')
                 .insert({
                     room_id: uuidv4()
@@ -63,7 +73,7 @@ export const useHangClient = (configuration: any) => {
         client.peerConnection.addEventListener('icecandidate', event => {
             if(!event.candidate) return;  
 
-            supabase
+            supabase_client
                 .from('rooms')
                 .select()
                 .match({ room_id: room_id })
@@ -74,15 +84,11 @@ export const useHangClient = (configuration: any) => {
                         const new_callers = data.caller_candidates
                               new_callers.push(event.candidate?.toJSON());
 
-                        console.log(`UPLOADING CANDIDATES`, data, new_callers);
-
-                        supabase
+                        supabase_client
                             .from('rooms')
                             .update({ caller_candidates: new_callers })
                             .match({ room_id: room_id })
-                            .then(e => {
-                                console.log("CANDIDATE CHANGE", e)
-                            })
+                            .then(e => e.error && console.error("Supabase Client update threw error when adding ice-candidate: ", e))
                     }
                 })
         });
@@ -92,7 +98,7 @@ export const useHangClient = (configuration: any) => {
         await client.peerConnection.setLocalDescription(offer);
 
         // Create a new supabase room with 'roomWithOffer' value. Store the generated return room's id.
-        await supabase
+        await supabase_client
             .from('rooms')
             .update({
                 offer: {
@@ -112,25 +118,20 @@ export const useHangClient = (configuration: any) => {
             event.streams[0].getTracks().forEach(track => client.remoteStream.addTrack(track));
         });
 
-        supabase
+        supabase_client
             .from(`rooms:room_id=eq.${room_id}`)
             .on("*", async payload => {
                 const data = payload.new;
 
                 if(payload.eventType == "DELETE") { hangUp(); return; } 
-                console.log(`Recieved Remote Response`, data);
 
                 if(!client.peerConnection.currentRemoteDescription && data && data.answer) {
                     const rtcSessionDescription = new RTCSessionDescription(data.answer);
                     await client.peerConnection.setRemoteDescription(rtcSessionDescription);
-
-                    console.log(`Assigned Remote Description`, rtcSessionDescription, data.answer);
                 }
 
-                // Check if ICE candidates change, if so add new ICE candidate to peer connection [ERR] (Possible Error)
                 if(payload.old?.callee_candidates !== payload.new?.callee_candidates) {
                     data.callee_candidates.forEach((candidate: RTCIceCandidateInit) => {
-                        // console.log(`ADDING ICE CANDIDATE`, candidate); Possible Error
                         client.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
                     });
                 }
@@ -138,7 +139,7 @@ export const useHangClient = (configuration: any) => {
     }
 
     const joinRoom = async (room_id: any) => {  
-        const data = await supabase
+        const data = await supabase_client
             .from('rooms')
             .select()
             .match({ room_id: room_id })
@@ -159,7 +160,7 @@ export const useHangClient = (configuration: any) => {
                 if (!event.candidate) return;
 
                 // Maybe quite expensive task given 4 way ping.
-                supabase
+                supabase_client
                     .from('rooms')
                     .select()
                     .match({ room_id: room_id })
@@ -170,15 +171,11 @@ export const useHangClient = (configuration: any) => {
                             const new_callees = data.callee_candidates
                                   new_callees.push(event.candidate?.toJSON());
 
-                            console.log(`UPLOADING CANDIDATES`, data, new_callees);
-
-                            supabase
+                            supabase_client
                                 .from('rooms')
                                 .update({ callee_candidates: new_callees })
                                 .match({ room_id: room_id })
-                                .then(e => {
-                                    console.log("CANDIDATE CHANGE", e)
-                                })
+                                .then(e => e.error && console.error("Supabase Client update threw error when adding ice-candidate: ", e))
                         }
                     })
             }); 
@@ -192,7 +189,7 @@ export const useHangClient = (configuration: any) => {
             const answer = await client.peerConnection.createAnswer();
             await client.peerConnection.setLocalDescription(answer);
 
-            await supabase
+            await supabase_client
                 .from('rooms')
                 .update({ 
                     answer: {
@@ -202,20 +199,12 @@ export const useHangClient = (configuration: any) => {
                 })
                 .match({ room_id: room_id })
 
-            supabase
+                supabase_client
                 .from(`rooms:room_id=eq.${room_id}`)
                 .on("*", async payload => {
                     if(payload.eventType == "DELETE") { hangUp(); return; }
-                    
-                    // if(!client.peerConnection.currentRemoteDescription && data && data.answer) {
-                    //     const rtcSessionDescription = new RTCSessionDescription(data.answer);
-                    //     await client.peerConnection.setRemoteDescription(rtcSessionDescription);
-
-                    //     console.log(`Assigned Remote Description`, rtcSessionDescription, data.answer);
-                    // }
 
                     payload.new.caller_candidates.forEach((e: RTCIceCandidateInit) => {
-                        console.log(`ADDING ICE CALL[ER] CANDIDATE`, e);
                         client.peerConnection.addIceCandidate(new RTCIceCandidate(e))
                     })
                 }).subscribe()
@@ -223,51 +212,51 @@ export const useHangClient = (configuration: any) => {
     }
 
     const hangUp = async () => {    
-        if(client.remoteStream) client.remoteStream.getTracks().forEach(track => track.stop());
-        if (client.peerConnection) client.peerConnection.close();
+        supabase_client.getSubscriptions().forEach(e => e.unsubscribe());
 
-        setClient({ ...client, connected: false, room_id: null });
-        supabase.getSubscriptions().forEach(e => e.unsubscribe());
-        
+        if (client.remoteStream)   client.remoteStream.getTracks().forEach(track => track.stop());
+        if (client.peerConnection) client.peerConnection.close();
         if(client.room_id) {
-            const data = await supabase
+            const data = await supabase_client
                 .from('rooms')
                 .select()
                 .match({ room_id: client.room_id })
                 .then(e => e?.data?.[0]);
-            
-            console.log(data);
 
-            data.callee_candidates.forEach(async (candidate: any) => {
-                await candidate.ref.delete();
-            });
+            if(data.callee_candidates)
+                data.callee_candidates.forEach(async (candidate: any) => {
+                    await candidate.ref.delete();
+                });
 
-            data.caller_candidates.forEach(async (candidate: any) => {
-                await candidate.ref.delete();
-            });
+            if(data.caller_candidates)
+                data.caller_candidates.forEach(async (candidate: any) => {
+                    await candidate.ref.delete();
+                });
 
-            await supabase
+            await supabase_client
                 .from('rooms')
                 .delete()
                 .match({ room_id: client.room_id });
         }
+
+        setClient({ ...client, connected: false, room_id: null });
     }
 
     const registerPeerConnectionListeners = () => {
         client.peerConnection.addEventListener('icegatheringstatechange', (ev) => {
-          console.log(`ICE gathering state changed: ${client.peerConnection.iceGatheringState}`, ev);
+          console.log(`[EVT] ICE GATHERING: ${client.peerConnection.iceGatheringState}`, ev);
         });
       
         client.peerConnection.addEventListener('connectionstatechange', (ev) => {
-          console.log(`Connection state change: ${client.peerConnection.connectionState}`, ev);
+          console.log(`[EVT] CONNECTION STATE: ${client.peerConnection.connectionState}`, ev);
         });
       
         client.peerConnection.addEventListener('signalingstatechange', (ev) => {
-          console.log(`Signaling state change: ${client.peerConnection.signalingState}`, ev);
+          console.log(`[EVT] SIGNALING STATE: ${client.peerConnection.signalingState}`, ev);
         });
       
         client.peerConnection.addEventListener('iceconnectionstatechange ', (ev) => {
-          console.log(`ICE connection state change: ${client.peerConnection.iceConnectionState}`, ev);
+          console.log(`[EVT] ICE CONNECTION: ${client.peerConnection.iceConnectionState}`, ev);
         });
     }
 

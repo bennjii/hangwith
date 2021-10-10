@@ -1,30 +1,16 @@
 import type { NextPage } from 'next'
-import Head from 'next/head'
-import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import Camera from '../public/components/camera'
+import { supabase } from '../public/src/client'
 
 import { useHangClient } from '../public/src/hang_client'
-import HangClient from '../public/src/rtc'
 import styles from '../styles/Home.module.css'
 
 const Home: NextPage = () => {
 	const local_ref = useRef(null);
 	const target_ref = useRef(null);
 
-	const { client, createRoom, joinRoom, hangUp } = 
-		useHangClient({
-			iceServers: [
-				{
-					urls: [
-						'stun:stun1.l.google.com:19302',
-						'stun:stun2.l.google.com:19302',
-					],
-				},
-			],
-			iceCandidatePoolSize: 10,
-		});
-
+	const { client, createRoom, joinRoom, hangUp } = useHangClient(supabase);
 	const input_ref = useRef(null);
 
     useEffect(() => {
@@ -47,7 +33,7 @@ const Home: NextPage = () => {
 					<div className={styles.communication}>
 						<div>
 							<h2>YOU</h2>
-							<Camera camera_stream={client.localStream} muted></Camera>
+							<Camera camera_stream={client.localStream} muted={true}></Camera>
 						</div>
 
 						<div>
