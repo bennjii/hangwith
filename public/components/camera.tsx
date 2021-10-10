@@ -10,7 +10,7 @@ export const Camera = (camera_stream: MediaStream | any, muted?: boolean) => {
     }, [stream, video_ref])
 
     return (
-        <video ref={video_ref} autoPlay muted={muted ? muted : false}></video>
+        <video ref={video_ref} autoPlay muted={muted}></video>
     )
 }
 

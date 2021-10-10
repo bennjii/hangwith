@@ -52,7 +52,7 @@ const Home: NextPage = () => {
 
 						<div>
 							<h2>USER</h2>
-							<Camera camera_stream={client.remoteStream}></Camera>
+							<Camera camera_stream={client.remoteStream} muted={false}></Camera>
 						</div>
 					</div>
 				</div>
