@@ -1,19 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 
-export const Camera = (camera_stream: MediaStream | any, muted?: boolean) => {
+const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean }> = ({ camera_stream, muted }) => {
     const [ stream, setStream ] = useState(camera_stream);
     const video_ref = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
         if(stream && video_ref.current && !video_ref.current.srcObject) {
-            video_ref.current.srcObject = stream.camera_stream;
+            console.log(stream);
+            video_ref.current.srcObject = stream;
 
-            console.log(camera_stream);
+            // const audioContext = new AudioContext();
+            // const analyser = audioContext.createAnalyser();
+            // const microphone = audioContext.createMediaStreamSource(stream);
+            // const node = audioContext.createGain();
         }
-    }, [stream, video_ref, camera_stream])
+    }, [stream, video_ref])
+
+    useEffect(() => {
+        setStream(camera_stream);
+    }, [camera_stream])
 
     return (
-        <video ref={video_ref} autoPlay muted={muted}></video>
+        <div>
+            <div></div>
+            <video ref={video_ref} autoPlay muted={muted}></video>
+        </div>
     )
 }
 

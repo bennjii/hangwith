@@ -7,21 +7,21 @@ import { useHangClient } from '../public/src/hang_client'
 import styles from '../styles/Home.module.css'
 
 const Home: NextPage = () => {
-	const local_ref = useRef(null);
-	const target_ref = useRef(null);
+	// const local_ref = useRef(null);
+	// const target_ref = useRef(null);
 
 	const { client, createRoom, joinRoom, hangUp } = useHangClient(supabase);
 	const input_ref = useRef(null);
 
-    useEffect(() => {
-		//@ts-expect-error
-		if(local_ref.current) local_ref.current.srcObject = client.localStream;
-    }, [client.localStream, client?.room_id])
+    // useEffect(() => {
+	// 	//@ts-expect-error
+	// 	if(local_ref.current) local_ref.current.srcObject = client.localStream;
+    // }, [client.localStream, client?.room_id])
 
-    useEffect(() => {
-		//@ts-expect-error
-        if(target_ref.current) target_ref.current.srcObject = client.remoteStream;
-    }, [client.remoteStream, client?.room_id])
+    // useEffect(() => {
+	// 	//@ts-expect-error
+    //     if(target_ref.current) target_ref.current.srcObject = client.remoteStream;
+    // }, [client.remoteStream, client?.room_id])
 	
   	return (
 		<div className={styles.container}>

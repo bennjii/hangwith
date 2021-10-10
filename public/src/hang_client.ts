@@ -216,7 +216,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
 
         if (client.remoteStream)   client.remoteStream.getTracks().forEach(track => track.stop());
         if (client.peerConnection) client.peerConnection.close();
-        if(client.room_id) {
+        if (client.room_id) {
             const data = await supabase_client
                 .from('rooms')
                 .select()
