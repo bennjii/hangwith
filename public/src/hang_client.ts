@@ -20,8 +20,14 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         localStream: MediaStream,
         remoteStream: MediaStream,
         peerConnection: RTCPeerConnection,
+
+        devices: MediaDeviceInfo[],
+        currentAudio: MediaStreamTrack | null,
+        currentVideo: MediaStreamTrack | null,
+
         room_id: any,
-        connected: boolean
+        connected: boolean,
+        muted: boolean
     }>({
         config: configuration  ? configuration : default_config,
         //@ts-expect-error
@@ -30,9 +36,15 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         remoteStream: process.browser ? new MediaStream() : null,
         //@ts-expect-error
         peerConnection: process.browser ? new RTCPeerConnection(configuration) : null,
+
+        devices: [],
+        currentAudio: null,
+        currentVideo: null,
+
         room_id: null,
         connected: false,
-    });
+        muted: false
+    }); 
 
     useEffect(() => {
         if(process.browser && !client.localStream) {
@@ -40,11 +52,22 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
                 navigator.mediaDevices?.getUserMedia({
                     video: true,
                     audio: true
-                }).then((stream: MediaStream) => {
-                    setClient({ ...client, localStream: stream });
+                }).then(async (stream: MediaStream) => {
+                    const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
+                        return e;
+                    });
+
+                    devices.forEach(e => {
+                        console.log(`${e.groupId} ${e.label}`);
+                    })
+
+                    console.log(`Current `, stream.getAudioTracks()[0].getCapabilities().groupId)
+
+                    setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0] });
                 });
             }else {
                 setClient({ ...client, localStream: new MediaStream() });
+                throw new Error("Client Declined Media - Possibly Unsecure (http) Connection.");                
             }
         }   
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -217,29 +240,13 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         if (client.remoteStream)   client.remoteStream.getTracks().forEach(track => track.stop());
         if (client.peerConnection) client.peerConnection.close();
         if (client.room_id) {
-            const data = await supabase_client
-                .from('rooms')
-                .select()
-                .match({ room_id: client.room_id })
-                .then(e => e?.data?.[0]);
-
-            if(data.callee_candidates)
-                data.callee_candidates.forEach(async (candidate: any) => {
-                    await candidate.ref.delete();
-                });
-
-            if(data.caller_candidates)
-                data.caller_candidates.forEach(async (candidate: any) => {
-                    await candidate.ref.delete();
-                });
-
             await supabase_client
                 .from('rooms')
                 .delete()
                 .match({ room_id: client.room_id });
         }
 
-        setClient({ ...client, connected: false, room_id: null });
+        setClient({ ...client, connected: false, room_id: null, peerConnection: new RTCPeerConnection(client.config) });
     }
 
     const registerPeerConnectionListeners = () => {
@@ -260,7 +267,30 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         });
     }
 
-    return { client, createRoom, joinRoom, hangUp, registerPeerConnectionListeners };
+    const muteClient = () => {
+        client.localStream.getAudioTracks().forEach(e => {
+            e.enabled = false;
+        });
+
+        setClient({ ...client, muted: true });
+    }
+
+    const unMuteClient = () => {
+        client.localStream.getAudioTracks().forEach(e => {
+            e.enabled = true;
+        });
+
+        setClient({ ...client, muted: false });
+    }
+
+    return { 
+        client, 
+        createRoom, 
+        joinRoom, 
+        hangUp, 
+        muteClient,
+        unMuteClient
+    };
 }
 
 export default useHangClient;

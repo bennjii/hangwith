@@ -1,17 +1,22 @@
 import type { NextPage } from 'next'
 import { useEffect, useRef, useState } from 'react'
+import { Mic, MicOff } from 'react-feather'
 import Camera from '../public/components/camera'
+import Button from '../public/components/un-ui/button'
+import Input from '../public/components/un-ui/input'
+import Form from '../public/components/un-ui/form'
 import { supabase } from '../public/src/client'
 
 import { useHangClient } from '../public/src/hang_client'
 import styles from '../styles/Home.module.css'
+import DropDown from '../public/components/un-ui/dropdown'
 
 const Home: NextPage = () => {
 	// const local_ref = useRef(null);
 	// const target_ref = useRef(null);
 
-	const { client, createRoom, joinRoom, hangUp } = useHangClient(supabase);
-	const input_ref = useRef(null);
+	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient } = useHangClient(supabase);
+	const [ discoverID, setDiscoverID ] = useState("");
 
     // useEffect(() => {
 	// 	//@ts-expect-error
@@ -41,6 +46,23 @@ const Home: NextPage = () => {
 							<Camera camera_stream={client.remoteStream} muted={false}></Camera>
 						</div>
 					</div>
+
+					<div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
+						{
+							client.muted ? 
+								<Button onClick={() => unMuteClient()} icon={<MicOff size={16} />}></Button>
+							:
+								<Button onClick={() => muteClient()} icon={<Mic size={16} />}></Button>
+						}
+
+						<DropDown 
+							options={client.devices.filter(e => e.kind == "audioinput" && e.deviceId !== "default" && e.deviceId !== "communications")} 
+							defaultValue={client.currentAudio?.getCapabilities().groupId} 
+							parameter={"label"} 
+							valueParameter={"groupId"}
+							callback={(e: any) => { console.log(client.devices.find(__ => __.groupId == e && __.kind == "audioinput")) }}
+							/>
+					</div>
 				</div>
 				:
 				<p>No room, try joining one.</p>
@@ -48,17 +70,22 @@ const Home: NextPage = () => {
 
 			{
 				client?.room_id ? 
-				<button onClick={() => hangUp()}>Leave Room</button>
+				<Button onClick={() => hangUp()}>Leave Room</Button>
 				:
-				<div>
-					<button onClick={() => createRoom()}>Create Room</button>
-					<input type="text" placeholder="room id" ref={input_ref}/>
+				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+					<Form style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
+						<Input 
+							type="text" 
+							placeholder="Room ID" 
+							callback={(value: any) => setDiscoverID(value)}
+							/>
 
-					<button 
-						//@ts-expect-error
-						onClick={() => joinRoom(input_ref.current?.value)}>
-						Join Room
-					</button>
+						<Button onClick={() => joinRoom(discoverID) }>Join Room</Button>
+					</Form>
+					
+					<p>or</p>
+
+					<Button onClick={() => createRoom()}>Create Room</Button>
 				</div>	
 			}
 		</div>

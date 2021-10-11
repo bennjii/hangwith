@@ -9,10 +9,12 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean }> = ({ came
             console.log(stream);
             video_ref.current.srcObject = stream;
 
-            // const audioContext = new AudioContext();
-            // const analyser = audioContext.createAnalyser();
-            // const microphone = audioContext.createMediaStreamSource(stream);
-            // const node = audioContext.createGain();
+            if(stream.getAudioTracks().length > 0) {
+                const audioContext = new AudioContext();
+                const microphone = audioContext.createMediaStreamSource(stream);
+
+                console.log(microphone);
+            }
         }
     }, [stream, video_ref])
 
