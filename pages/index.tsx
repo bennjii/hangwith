@@ -12,21 +12,8 @@ import styles from '../styles/Home.module.css'
 import DropDown from '../public/components/un-ui/dropdown'
 
 const Home: NextPage = () => {
-	// const local_ref = useRef(null);
-	// const target_ref = useRef(null);
-
-	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient } = useHangClient(supabase);
+	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice } = useHangClient(supabase);
 	const [ discoverID, setDiscoverID ] = useState("");
-
-    // useEffect(() => {
-	// 	//@ts-expect-error
-	// 	if(local_ref.current) local_ref.current.srcObject = client.localStream;
-    // }, [client.localStream, client?.room_id])
-
-    // useEffect(() => {
-	// 	//@ts-expect-error
-    //     if(target_ref.current) target_ref.current.srcObject = client.remoteStream;
-    // }, [client.remoteStream, client?.room_id])
 	
   	return (
 		<div className={styles.container}>
@@ -60,7 +47,10 @@ const Home: NextPage = () => {
 							defaultValue={client.currentAudio?.getCapabilities().groupId} 
 							parameter={"label"} 
 							valueParameter={"groupId"}
-							callback={(e: any) => { console.log(client.devices.find(__ => __.groupId == e && __.kind == "audioinput")) }}
+							callback={(e: any) => { {
+								const source = client.devices.find(__ => __.groupId == e && __.kind == "audioinput");
+								if(source) setAudioDevice(source)
+							}}}
 							/>
 					</div>
 				</div>

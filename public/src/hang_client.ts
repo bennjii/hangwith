@@ -51,17 +51,19 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
             if(navigator.mediaDevices) {
                 navigator.mediaDevices?.getUserMedia({
                     video: true,
-                    audio: true
+                    audio: {
+                        echoCancellation: true,
+                    }
                 }).then(async (stream: MediaStream) => {
                     const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
                         return e;
                     });
 
-                    devices.forEach(e => {
-                        console.log(`${e.groupId} ${e.label}`);
-                    })
+                    // devices.forEach(e => {
+                    //     console.log(`${e.groupId} ${e.label}`);
+                    // })
 
-                    console.log(`Current `, stream.getAudioTracks()[0].getCapabilities().groupId)
+                    // console.log(`Current `, stream.getAudioTracks()[0].getCapabilities().groupId)
 
                     setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0] });
                 });
@@ -240,6 +242,8 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         if (client.remoteStream)   client.remoteStream.getTracks().forEach(track => track.stop());
         if (client.peerConnection) client.peerConnection.close();
         if (client.room_id) {
+            // await supabase_client.getSubscriptions().forEach(e => supabase_client.removeSubscription(e));
+
             await supabase_client
                 .from('rooms')
                 .delete()
@@ -267,20 +271,62 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         });
     }
 
-    const muteClient = () => {
-        client.localStream.getAudioTracks().forEach(e => {
-            e.enabled = false;
-        });
+    const muteClient = (stream?: MediaStream) => {
+        if(stream) {
+            stream.getAudioTracks().forEach(e => {
+                e.enabled = false;
+            }); 
+        }else {
+            client.localStream.getAudioTracks().forEach(e => {
+                e.enabled = false;
+            });
+        }
 
         setClient({ ...client, muted: true });
     }
 
-    const unMuteClient = () => {
-        client.localStream.getAudioTracks().forEach(e => {
-            e.enabled = true;
-        });
-
+    const unMuteClient = (stream?: MediaStream) => {
+        if(stream) {
+            stream.getAudioTracks().forEach(e => {
+                e.enabled = true;
+            }); 
+        }else {
+            client.localStream.getAudioTracks().forEach(e => {
+                e.enabled = true;
+            });
+        }
+        
         setClient({ ...client, muted: false });
+    }
+
+    const setAudioDevice = (source: MediaDeviceInfo) => {
+        navigator.mediaDevices?.getUserMedia({
+            video: true,
+            audio: {
+                echoCancellation: true,
+                deviceId: source?.deviceId
+            }
+        }).then(async (stream: MediaStream) => {
+            const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
+                return e;
+            });
+
+            console.log(`[DEVICE]: New Audio Device Set :: ${stream.getAudioTracks()[0].label}`)
+
+            setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0] });
+
+            const new_audio_track = stream.getAudioTracks()[0];
+
+            client.peerConnection.getSenders().forEach(e => {
+                if(e.track && e.track.kind == "audio") {
+                    if(new_audio_track) e.replaceTrack(new_audio_track);
+                }
+            });
+
+            if(client.muted) {
+                muteClient(stream);       
+            }
+        });
     }
 
     return { 
@@ -289,7 +335,8 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         joinRoom, 
         hangUp, 
         muteClient,
-        unMuteClient
+        unMuteClient,
+        setAudioDevice
     };
 }
 

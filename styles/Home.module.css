@@ -126,3 +126,10 @@
   justify-content: space-between;
   width: 70%;
 }
+
+.talkingBar {
+  background-color: greenyellow;
+  height: 5px;
+
+  transition: .2s ease all;
+}
