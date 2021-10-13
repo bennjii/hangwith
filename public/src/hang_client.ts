@@ -237,7 +237,9 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
     }
 
     const hangUp = async () => {    
-        supabase_client.getSubscriptions().forEach(e => e.unsubscribe());
+        await supabase_client.getSubscriptions().forEach(subscription => subscription.unsubscribe());
+
+        // client.localStream.getTracks().forEach(track => track.stop());
 
         if (client.remoteStream)   client.remoteStream.getTracks().forEach(track => track.stop());
         if (client.peerConnection) client.peerConnection.close();
@@ -249,6 +251,8 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
                 .delete()
                 .match({ room_id: client.room_id });
         }
+
+        console.log(supabase_client);
 
         setClient({ ...client, connected: false, room_id: null, peerConnection: new RTCPeerConnection(client.config) });
     }

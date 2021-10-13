@@ -7,53 +7,63 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean }> = ({ came
     const video_ref = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
+        console.log(`Effect Called!`);
+        
         if(stream && video_ref.current && !video_ref.current.srcObject) {
             console.log(stream);
             video_ref.current.srcObject = stream;
 
             if(stream.getAudioTracks().length > 0) {
-                setVolume(0);
-                
                 const ctx = new AudioContext();
-                const microphone = ctx.createScriptProcessor(2048, 1, 1);
-                microphone.connect(ctx.destination);
+                
+                ctx.audioWorklet.addModule("components/audio_processor.js").then(() => {
+                    const microphone = new AudioWorkletNode(ctx, "client-audio-processing", {
+                        numberOfInputs: 1,
+                        numberOfOutputs: 1
+                    });
 
-                const minUpdateRate = 50;
-		        let lastRefreshTime = 0;
+                    microphone.connect(ctx.destination);
 
-                const handleProcess = (event: AudioProcessingEvent) => {
-                    // limit update frequency
-                    if (event.timeStamp - lastRefreshTime < minUpdateRate) {
-                        return;
+                    const src = ctx.createMediaStreamSource(stream);
+                    src.connect(microphone);
+
+                    const handleListener = (event: any) => {
+                        let _volume = 0
+                        if (event.data.volume)
+                            _volume = event.data.volume;
+
+                        setVolume(_volume)
                     }
-        
-                    // update last refresh time
-                    lastRefreshTime = event.timeStamp;
-        
-                    const input = event.inputBuffer.getChannelData(0);
-                    const total = input.reduce((acc, val) => acc + Math.abs(val), 0);
-                    const rms = Math.min(0.5, Math.sqrt(total / input.length));
-                    setVolume(rms);
-                };
 
-                const src = ctx.createMediaStreamSource(stream);
-				src.connect(microphone);
-				microphone.addEventListener('audioprocess', handleProcess);
+                    microphone.port.onmessage = handleListener;
 
-                return () => {
-                    microphone.removeEventListener('audioprocess', handleProcess);
-                };
+                    return () => {
+                        microphone.port.removeEventListener("message", handleListener);
+                    };
+                }).catch(e => console.error(e));
+            }else {
+                setVolume(0);
             }
+        }else {
+            setVolume(0);
         }
     }, [stream, video_ref])
 
     useEffect(() => {
         setStream(camera_stream);
+
+        camera_stream.onaddtrack = () => setStream({ ...camera_stream });
+        camera_stream.onremovetrack = () => setStream({ ...camera_stream });
+
+        return () => {
+            camera_stream.removeEventListener("addtrack", () => setStream({ ...camera_stream }));
+            camera_stream.removeEventListener("removetrack", () => setStream({ ...camera_stream }));
+        }
     }, [camera_stream])
 
     return (
         <div>
-            <div style={{ width: `${Math.round(volume * 2 * 100)}%` }} className={styles.talkingBar}></div>
+            <div style={{ width: `${Math.round(volume * 100 * 2)}%` }} className={styles.talkingBar}></div>
             <video ref={video_ref} autoPlay muted={muted}></video>
         </div>
     )
