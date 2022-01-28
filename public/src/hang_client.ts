@@ -52,7 +52,11 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
                 navigator.mediaDevices?.getUserMedia({
                     video: true,
                     audio: {
-                        echoCancellation: true,
+                        channelCount: 2,
+                        echoCancellation: false,
+                        latency: 0,
+                        sampleRate: 48000,
+                        sampleSize: 16
                     }
                 }).then(async (stream: MediaStream) => {
                     const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
