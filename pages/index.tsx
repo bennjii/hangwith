@@ -55,28 +55,38 @@ const Home: NextPage = () => {
 					</div>
 				</div>
 				:
-				<p>No room, try joining one.</p>
+				<></>
 			}
 
 			{
 				client?.room_id ? 
 				<Button onClick={() => hangUp()}>Leave Room</Button>
 				:
-				<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-					<Form style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
-						<Input 
-							type="text" 
-							placeholder="Room ID" 
-							callback={(value: any) => setDiscoverID(value)}
-							/>
+				<div className="flex flex-row justify-between">
+					<div className="flex flex-col items-center justify-center gap-4">
+						<p>No room, try joining one.</p>
 
-						<Button onClick={() => joinRoom(discoverID) }>Join Room</Button>
-					</Form>
-					
-					<p>or</p>
+						<Form style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
+							<Input 
+								type="text" 
+								placeholder="Room ID" 
+								callback={(value: any) => setDiscoverID(value)}
+								/>
 
-					<Button onClick={() => createRoom()}>Create Room</Button>
-				</div>	
+							<Button onClick={() => joinRoom(discoverID) }>Join Room</Button>
+						</Form>
+						
+						<p>or</p>
+
+						<Button onClick={() => createRoom()}>Create Room</Button>
+
+					</div>
+
+					<div className="flex flex-col items-center justify-center">
+						<Camera camera_stream={client.localStream} muted={true} height={250}></Camera>
+					</div>	
+				</div>
+				
 			}
 		</div>
 	)

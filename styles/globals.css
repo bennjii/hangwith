@@ -28,3 +28,7 @@ a {
   font-weight: 1 999;
   font-style: italic;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

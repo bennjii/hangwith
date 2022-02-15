@@ -49,6 +49,9 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
     useEffect(() => {
         if(process.browser && !client.localStream) {
             if(navigator.mediaDevices) {
+                // getDisplayMedia for sharing screen. (Add Stream)
+                
+
                 navigator.mediaDevices?.getUserMedia({
                     video: true,
                     audio: {
@@ -95,8 +98,11 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
                 });
 
         client.localStream?.getTracks().forEach(track => {
+            console.log(track);
             client.peerConnection.addTrack(track, client.localStream);
         });
+
+        // For adding video sharing, simply gather the stream, and add the individual tracks.
 
         // Collect ICE candidates
         client.peerConnection.addEventListener('icecandidate', event => {

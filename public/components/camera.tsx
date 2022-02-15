@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from '../../styles/Home.module.css'
 
-const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean }> = ({ camera_stream, muted }) => {
+const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: number }> = ({ camera_stream, muted, height }) => {
     const [ stream, setStream ] = useState(camera_stream);
     const [ volume, setVolume ] = useState(0);
     const video_ref = useRef<HTMLVideoElement>(null);
@@ -50,6 +50,8 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean }> = ({ came
     }, [stream, video_ref])
 
     useEffect(() => {
+        if(!camera_stream) return;
+
         setStream(camera_stream);
 
         camera_stream.onaddtrack = () => setStream({ ...camera_stream });
@@ -62,9 +64,9 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean }> = ({ came
     }, [camera_stream])
 
     return (
-        <div>
+        <div style={{ height: height ?? 'inherit' }}>
+            <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
             <div style={{ width: `${Math.round(volume * 100 * 2)}%` }} className={styles.talkingBar}></div>
-            <video ref={video_ref} autoPlay muted={muted}></video>
         </div>
     )
 }
