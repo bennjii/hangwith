@@ -2,6 +2,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useState } from "react";
 import { SupabaseClient } from "@supabase/supabase-js";
 
+export type HangClient = {
+    config: any,
+    localStream: MediaStream,
+    remoteStream: MediaStream,
+    peerConnection: RTCPeerConnection,
+
+    devices: MediaDeviceInfo[],
+    currentAudio: MediaStreamTrack | null,
+    currentVideo: MediaStreamTrack | null,
+
+    room_id: any,
+    connected: boolean,
+    muted: boolean
+}
+
 const default_config = {
     iceServers: [
         {
@@ -15,20 +30,7 @@ const default_config = {
 };
 
 export const useHangClient = (supabase_client: SupabaseClient, configuration?: any) => {
-    const [ client, setClient ] = useState<{
-        config: any,
-        localStream: MediaStream,
-        remoteStream: MediaStream,
-        peerConnection: RTCPeerConnection,
-
-        devices: MediaDeviceInfo[],
-        currentAudio: MediaStreamTrack | null,
-        currentVideo: MediaStreamTrack | null,
-
-        room_id: any,
-        connected: boolean,
-        muted: boolean
-    }>({
+    const [ client, setClient ] = useState<HangClient>({
         config: configuration  ? configuration : default_config,
         //@ts-expect-error
         localStream: null,
@@ -96,6 +98,9 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
                 .then(e => { 
                     return e.data?.[0].room_id;
                 });
+        
+        // window.location.href = "./room/"+room_id;
+        // return;
 
         client.localStream?.getTracks().forEach(track => {
             console.log(track);
@@ -353,5 +358,6 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         setAudioDevice
     };
 }
+
 
 export default useHangClient;

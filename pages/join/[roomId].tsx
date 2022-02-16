@@ -1,20 +1,23 @@
 import type { NextPage } from 'next'
 import { useEffect, useRef, useState } from 'react'
 import { Mic, MicOff } from 'react-feather'
-import Camera from '../public/components/camera'
-import Button from '../public/components/un-ui/button'
-import Input from '../public/components/un-ui/input'
-import Form from '../public/components/un-ui/form'
-import { supabase } from '../public/src/client'
+import Camera from '@components/camera'
+import Button from '@components/un-ui/button'
+import Input from '@components/un-ui/input'
+import Form from '@components/un-ui/form'
+import { supabase } from '@public/src/client'
 
-import { useHangClient } from '../public/src/hang_client'
-import styles from '../styles/Home.module.css'
-import DropDown from '../public/components/un-ui/dropdown'
-import InputModule from '../public/components/input_module'
+import { useHangClient } from '@public/src/hang_client'
+import styles from '@styles/Home.module.css'
+import DropDown from '@public/components/un-ui/dropdown'
+import InputModule from '@public/components/input_module'
+import { useRouter } from 'next/dist/client/router'
 
 const Home: NextPage = () => {
 	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice } = useHangClient(supabase);
 	const [ displayName, setDisplayName ] = useState("");
+
+	const router = useRouter()
 	
   	return (
 		<div className="flex min-h-screen w-full bg-[#101418] font-sans">
@@ -74,11 +77,11 @@ const Home: NextPage = () => {
 								/>
 
 							<Button 
-								onClick={() => createRoom() } 
+								onClick={() => joinRoom(router.query.roomId) } 
 								icon={false}
 								className="flex flex-row w-full bg-blue-700 justify-center rounded-lg px-4 py-2 text-white text-opacity-80 text-[.9rem] font-light outline-none shadow-md shadow-transparent hover:shadow-[0_3px_10px_rgba(58, 151, 212, 1)]"
 								>
-									Create Room
+									Join Room
 								</Button>
 						</Form>
 

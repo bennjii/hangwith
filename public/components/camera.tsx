@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import styles from '../../styles/Home.module.css'
+import Loader from "./un-ui/loader";
 
-const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: number }> = ({ camera_stream, muted, height }) => {
+const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: number, audioBar?: boolean }> = ({ camera_stream, muted, height, audioBar=true }) => {
     const [ stream, setStream ] = useState(camera_stream);
     const [ volume, setVolume ] = useState(0);
+    const [ cameraOn, setCameraOn ] = useState(false);
     const video_ref = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
-        console.log(`Effect Called!`);
+        setCameraOn(true);
         
         if(stream && video_ref.current && !video_ref.current.srcObject) {
             console.log(stream);
@@ -65,8 +67,17 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
 
     return (
         <div style={{ height: height ?? 'inherit' }}>
-            <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
-            <div style={{ width: `${Math.round(volume * 100 * 2)}%` }} className={styles.talkingBar}></div>
+            {
+                cameraOn 
+                ? 
+                <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
+                :
+                <Loader height={25} color={"#fff"}/>
+            }
+
+            {
+                audioBar ? <div style={{ width: `${Math.round(volume * 100 * 2)}%` }} className={styles.talkingBar}></div> : <></>
+            }
         </div>
     )
 }

@@ -2,7 +2,7 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif !important;
 }
 
@@ -11,10 +11,10 @@ a {
   text-decoration: none;
 }
 
-* {
+/* * {
   box-sizing: border-box;
   font-family: 'Public Sans';
-}
+} */
 
 @font-face {
   font-family: "Public Sans";
@@ -27,6 +27,43 @@ a {
   src: url('../public/fonts/Public_Sans/PublicSans-Italic-VariableFont_wght.ttf');
   font-weight: 1 999;
   font-style: italic;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url('../public/fonts/Inter/Inter-VariableFont_slnt\,wght.ttf');
+  font-weight: 1 999;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url('../public/fonts/Inter/Inter-VariableFont_slnt\,wght.ttf');
+  font-weight: 1 999;
+  font-style: italic;
+}
+
+/* Loader/Spinner */
+:root {
+  --spinner-animation-speed: 4s;
+}
+
+#spinner {
+  animation: spinner-rotate calc(var(--spinner-animation-speed) / 3) linear infinite;
+}
+
+@keyframes spinner-rotate {
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-line {
+  animation: dash var(--spinner-animation-speed) ease-in-out infinite;
+}
+
+@keyframes dash {
+  75%, 100% {
+      stroke-dasharray: .5, 1;
+      stroke-dashoffset: -.8;
+  }
 }
 
 @tailwind base;
