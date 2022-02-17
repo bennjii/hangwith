@@ -77,7 +77,7 @@ const Home: NextPage = () => {
 								/>
 
 							<Button 
-								onClick={() => joinRoom(router.query.roomId) } 
+								onClick={() => router.push(`./room/${router.query.roomId}`)} 
 								icon={false}
 								className="flex flex-row w-full bg-blue-700 justify-center rounded-lg px-4 py-2 text-white text-opacity-80 text-[.9rem] font-light outline-none shadow-md shadow-transparent hover:shadow-[0_3px_10px_rgba(58, 151, 212, 1)]"
 								>
@@ -85,7 +85,7 @@ const Home: NextPage = () => {
 								</Button>
 						</Form>
 
-						<p className="flex flex-row items-center gap-2 text-gray-600 text-sm">Want to make a room instead? <a onClick={() => createRoom()} className="flex flex-row text-blue-400">Create Room</a></p>
+						<p className="flex flex-row items-center gap-2 text-gray-600 text-sm">Want to make a room instead? <a onClick={() => router.push(`./room/${router.query.roomId}`)} className="flex flex-row text-blue-400">Create Room</a></p>
 					</div>
 
 					<div className="flex flex-col items-center justify-center bg-[#181b20] h-fit p-4 rounded-lg gap-4">

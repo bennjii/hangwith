@@ -11,10 +11,14 @@ import { useHangClient } from '../public/src/hang_client'
 import styles from '../styles/Home.module.css'
 import DropDown from '../public/components/un-ui/dropdown'
 import InputModule from '../public/components/input_module'
+import { useRouter } from 'next/dist/client/router'
 
 const Home: NextPage = () => {
 	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice } = useHangClient(supabase);
 	const [ displayName, setDisplayName ] = useState("");
+	const [ preID, setPreID ] = useState(crypto.randomUUID());
+
+	const router = useRouter();
 	
   	return (
 		<div className="flex min-h-screen w-full bg-[#101418] font-sans">
@@ -25,12 +29,10 @@ const Home: NextPage = () => {
 
 					<div className={styles.communication}>
 						<div>
-							<h2>YOU</h2>
 							<Camera camera_stream={client.localStream} muted={true}></Camera>
 						</div>
 
 						<div>
-							<h2>USER</h2>
 							<Camera camera_stream={client.remoteStream} muted={false}></Camera>
 						</div>
 					</div>
@@ -59,7 +61,10 @@ const Home: NextPage = () => {
 				</div>
 				:
 				<div className="flex flex-row justify-around flex-1 items-center">
-					<div className="flex flex-col items-start justify-center gap-4">
+					<div className="flex flex-col items-start justify-center gap-8">
+						<a className="flex flex-row items-center text-white gap-1 text-opacity-30">powered by <h1 className="text-white">hangwith</h1></a>
+						
+
 						<div className="flex flex-col gap-2">
 							<p className="text-[#62676c] m-0">Choose a name to create a hangroom.</p>
 							<h1 className="text-white text-xl m-0">Let{"\'"}s check your camera and mic</h1>
@@ -74,15 +79,15 @@ const Home: NextPage = () => {
 								/>
 
 							<Button 
-								onClick={() => createRoom() } 
+								onClick={() => router.push(`./room/${preID}`)} 
 								icon={false}
-								className="flex flex-row w-full bg-blue-700 justify-center rounded-lg px-4 py-2 text-white text-opacity-80 text-[.9rem] font-light outline-none shadow-md shadow-transparent hover:shadow-[0_3px_10px_rgba(58, 151, 212, 1)]"
+								className="flex flex-row w-full bg-blue-700 justify-center rounded-lg px-4 py-2 text-white text-opacity-80 text-[.9rem] font-light outline-none shadow-md shadow-transparent focus:shadow-[0_0px_0px_3px_rgba(95,150,255,0.2)]"
 								>
 									Create Room
 								</Button>
 						</Form>
 
-						<p className="flex flex-row items-center gap-2 text-gray-600 text-sm">Want to make a room instead? <a onClick={() => createRoom()} className="flex flex-row text-blue-400">Create Room</a></p>
+						<p className="flex flex-row items-center gap-2 text-gray-600 text-sm">Want to make a room instead? <a onClick={() => router.push(`./room/${router.query.roomId}`)} className="flex flex-row text-blue-400">Create Room</a></p>
 					</div>
 
 					<div className="flex flex-col items-center justify-center bg-[#181b20] h-fit p-4 rounded-lg gap-4">

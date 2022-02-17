@@ -84,7 +84,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const createRoom = async () => {  
+    const createRoom = async (rid: string) => {  
         setClient({ ...client, connected: true, peerConnection: new RTCPeerConnection(client.config)});
 
         registerPeerConnectionListeners();
@@ -93,7 +93,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
             await supabase_client
                 .from('rooms')
                 .insert({
-                    room_id: uuidv4()
+                    room_id: rid
                 })
                 .then(e => { 
                     return e.data?.[0].room_id;
@@ -270,6 +270,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         console.log(supabase_client);
 
         setClient({ ...client, connected: false, room_id: null, peerConnection: new RTCPeerConnection(client.config) });
+        return "complete";
     }
 
     const registerPeerConnectionListeners = () => {

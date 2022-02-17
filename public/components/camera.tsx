@@ -49,7 +49,7 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
         }else {
             setVolume(0);
         }
-    }, [stream, video_ref])
+    }, [stream, video_ref]);
 
     useEffect(() => {
         if(!camera_stream) return;
@@ -63,7 +63,7 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
             camera_stream.removeEventListener("addtrack", () => setStream({ ...camera_stream }));
             camera_stream.removeEventListener("removetrack", () => setStream({ ...camera_stream }));
         }
-    }, [camera_stream])
+    }, [camera_stream]);
 
     return (
         <div style={{ height: height ?? 'inherit' }}>
