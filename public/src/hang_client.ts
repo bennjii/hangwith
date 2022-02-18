@@ -349,6 +349,46 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         });
     }
 
+    const setVideoDevice = (source: MediaDeviceInfo) => {
+        console.log(`Updating to ${source.deviceId} and remaining keepstate`, client.currentAudio)
+        navigator.mediaDevices?.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                deviceId: client.currentAudio?.id
+            },
+            video: {
+                echoCancellation: true,
+                deviceId: source?.deviceId
+            }
+        }).then(async (stream: MediaStream) => {
+            const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
+                return e;
+            });
+
+            console.log(`[DEVICE]: New Video Device Set :: ${stream.getVideoTracks()[0].label}`)
+
+            setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0] });
+
+            const new_video_track = stream.getVideoTracks()[0];
+
+            client.peerConnection.getSenders().forEach(e => {
+                if(e.track && e.track.kind == "video") {
+                    if(new_video_track) e.replaceTrack(new_video_track);
+                }
+            });
+
+            console.log(stream);
+
+            if(client.muted) {
+                muteClient(stream);       
+            }
+        });
+    }
+
+    const setSpeakerDevice = () => {
+
+    }
+
     return { 
         client, 
         createRoom, 
@@ -356,7 +396,9 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         hangUp, 
         muteClient,
         unMuteClient,
-        setAudioDevice
+        setAudioDevice,
+        setVideoDevice,
+        setSpeakerDevice,
     };
 }
 

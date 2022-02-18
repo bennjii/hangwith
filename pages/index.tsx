@@ -1,4 +1,4 @@
-import type { NextPage } from 'next'
+import type { GetServerSideProps, NextPage } from 'next'
 import { useEffect, useRef, useState } from 'react'
 import { Mic, MicOff } from 'react-feather'
 import Camera from '../public/components/camera'
@@ -12,11 +12,20 @@ import styles from '../styles/Home.module.css'
 import DropDown from '../public/components/un-ui/dropdown'
 import InputModule from '../public/components/input_module'
 import { useRouter } from 'next/dist/client/router'
+import { randomUUID } from 'crypto'
 
-const Home: NextPage = () => {
-	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice } = useHangClient(supabase);
+export const getServerSideProps: GetServerSideProps = async () => {
+	return {
+		props: {
+			id: randomUUID()
+		}
+	}
+}
+
+const Home: NextPage<{ id: string }> = ({ id }) => {
+	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = useHangClient(supabase);
 	const [ displayName, setDisplayName ] = useState("");
-	const [ preID, setPreID ] = useState(crypto.randomUUID());
+	const [ preID, setPreID ] = useState<string>(id);
 
 	const router = useRouter();
 	
@@ -101,8 +110,8 @@ const Home: NextPage = () => {
 						</div>
 						
 						<InputModule _stream={client.localStream} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" />
-						<InputModule _stream={client.localStream} client={client} muted={true} speakerCallback={setAudioDevice} type="audio.out" />
-						<InputModule _stream={client.localStream} client={client} muted={true} videoCallback={setAudioDevice} type="video.in" />
+						<InputModule _stream={client.localStream} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" />
+						<InputModule _stream={client.localStream} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" />
 					</div>	
 				</div>
 			}

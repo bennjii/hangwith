@@ -46,12 +46,15 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
             }else {
                 setVolume(0);
             }
+        }else if(stream && video_ref.current) {
+            video_ref.current.srcObject = stream;
         }else {
             setVolume(0);
         }
     }, [stream, video_ref]);
 
     useEffect(() => {
+        console.log(`Stream Change!`);
         if(!camera_stream) return;
 
         setStream(camera_stream);
