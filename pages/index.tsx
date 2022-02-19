@@ -23,11 +23,14 @@ export const getServerSideProps: GetServerSideProps = async () => {
 }
 
 const Home: NextPage<{ id: string }> = ({ id }) => {
-	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = useHangClient(supabase);
+	const { client, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = useHangClient(supabase);
 	const [ displayName, setDisplayName ] = useState("");
-	const [ preID, setPreID ] = useState<string>(id);
 
 	const router = useRouter();
+
+	useEffect(() => {
+		console.log("Client update propogated", client);
+	}, [client])
 	
   	return (
 		<div className="flex min-h-screen w-full bg-[#101418] font-sans">
@@ -88,7 +91,7 @@ const Home: NextPage<{ id: string }> = ({ id }) => {
 								/>
 
 							<Button 
-								onClick={() => router.push(`./room/${preID}`)} 
+								onClick={() => router.push(`./room/${id}`)} 
 								icon={false}
 								className="flex flex-row w-full bg-blue-700 justify-center rounded-lg px-4 py-2 text-white text-opacity-80 text-[.9rem] font-light outline-none shadow-md shadow-transparent focus:shadow-[0_0px_0px_3px_rgba(95,150,255,0.2)]"
 								>
@@ -109,9 +112,9 @@ const Home: NextPage<{ id: string }> = ({ id }) => {
 								></Camera>
 						</div>
 						
-						<InputModule _stream={client.localStream} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" />
-						<InputModule _stream={client.localStream} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" />
-						<InputModule _stream={client.localStream} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" />
+						<InputModule _stream={client.localStream} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.getCapabilities().groupId ?? ""} />
+						<InputModule _stream={client.localStream} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client.devices.find(e => e.kind == "audiooutput")?.groupId ?? ""} />
+						<InputModule _stream={client.localStream} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.getCapabilities().groupId ?? ""} />
 					</div>	
 				</div>
 			}

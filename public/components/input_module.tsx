@@ -6,7 +6,7 @@ import useHangClient, { HangClient } from "../src/hang_client";
 import { supabase } from '../../public/src/client'
 import DropDown from "./un-ui/dropdown";
 
-const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function }> = ({ _stream, muted, type, client, audioCallback, speakerCallback, videoCallback }) => {
+const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string }> = ({ _stream, muted, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice }) => {
     const [ stream, setStream ] = useState(_stream);
     const [ volume, setVolume ] = useState(0);
 
@@ -22,11 +22,8 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
     useEffect(() => {
         if(type == "audio.in") {
             var time = new Date().getTime();
-
-            console.log(`Effect Called!`);
             
             if(stream && video_ref.current && !video_ref.current.srcObject) {
-                console.log(stream);
                 video_ref.current.srcObject = stream;
 
                 if(stream.getAudioTracks().length > 0) {
@@ -67,10 +64,9 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
             }else {
                 setVolume(0);
             }
-
-            console.log(stream);
         }else {
             ///... do nothing?
+            setVolume(0);
         }
 
     }, [stream, video_ref, type]);
@@ -122,7 +118,7 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
             <div className="flex-1 text-white w-full">
                 <DropDown 
                         options={client.devices.filter(e => e.kind == refType() && e.deviceId !== "default" && e.deviceId !== "communications")} 
-                        defaultValue={client.currentAudio?.getCapabilities().groupId} 
+                        defaultValue={defaultDevice} 
                         parameter={"label"} 
                         valueParameter={"groupId"}
                         callback={(e: any) => { {

@@ -14,7 +14,7 @@ import InputModule from '@public/components/input_module'
 import { useRouter } from 'next/dist/client/router'
 
 const Home: NextPage = () => {
-	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice } = useHangClient(supabase);
+	const { client, hangUp, muteClient, unMuteClient, setAudioDevice, setSpeakerDevice, setVideoDevice } = useHangClient(supabase);
 	const [ displayName, setDisplayName ] = useState("");
 
 	const router = useRouter()
@@ -98,9 +98,9 @@ const Home: NextPage = () => {
 								></Camera>
 						</div>
 						
-						<InputModule _stream={client.localStream} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" />
-						<InputModule _stream={client.localStream} client={client} muted={true} speakerCallback={setAudioDevice} type="audio.out" />
-						<InputModule _stream={client.localStream} client={client} muted={true} videoCallback={setAudioDevice} type="video.in" />
+						<InputModule _stream={client.localStream} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.id ?? ""} />
+						<InputModule _stream={client.localStream} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client.devices.find(e => e.kind == "audiooutput")?.deviceId ?? ""} />
+						<InputModule _stream={client.localStream} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.id ?? ""} />
 					</div>	
 				</div>
 			}

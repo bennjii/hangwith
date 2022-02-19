@@ -35,24 +35,39 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         //@ts-expect-error
         localStream: null,
         //@ts-expect-error
-        remoteStream: process.browser ? new MediaStream() : null,
+        remoteStream: null,
         //@ts-expect-error
-        peerConnection: process.browser ? new RTCPeerConnection(configuration) : null,
-
+        peerConnection: null,
         devices: [],
         currentAudio: null,
         currentVideo: null,
-
         room_id: null,
         connected: false,
         muted: false
     }); 
 
     useEffect(() => {
+        setClient({
+            config: configuration  ? configuration : default_config,
+            //@ts-expect-error
+            localStream: null,
+            //@ts-expect-error
+            remoteStream: process.browser ? new MediaStream() : null,
+            //@ts-expect-error
+            peerConnection: process.browser ? new RTCPeerConnection(configuration) : null,
+
+            devices: [],
+            currentAudio: null,
+            currentVideo: null,
+
+            room_id: null,
+            connected: false,
+            muted: false
+        });
+
         if(process.browser && !client.localStream) {
             if(navigator.mediaDevices) {
                 // getDisplayMedia for sharing screen. (Add Stream)
-                
 
                 navigator.mediaDevices?.getUserMedia({
                     video: true,
@@ -320,44 +335,48 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
     }
 
     const setAudioDevice = (source: MediaDeviceInfo) => {
+        console.log(`Updating to`, source, ` and remaining keepstate`, client.localStream.getVideoTracks()[0])
         navigator.mediaDevices?.getUserMedia({
-            video: true,
+            video: {
+                deviceId: client.localStream.getVideoTracks()[0].getCapabilities().deviceId
+            },
             audio: {
                 echoCancellation: true,
-                deviceId: source?.deviceId
+                deviceId: source?.deviceId                
             }
         }).then(async (stream: MediaStream) => {
             const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
                 return e;
             });
 
-            console.log(`[DEVICE]: New Audio Device Set :: ${stream.getAudioTracks()[0].label}`)
+            console.log(`[DEVICE]: New Audio Device Set :: ${stream.getAudioTracks()[0].label}`);
+            console.log(`[DEVICE]: Current Devices: MIC::[${stream.getAudioTracks()[0].label}] VIDEO::[${stream.getVideoTracks()[0].label}]`)
 
             setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0] });
 
             const new_audio_track = stream.getAudioTracks()[0];
 
-            client.peerConnection.getSenders().forEach(e => {
-                if(e.track && e.track.kind == "audio") {
-                    if(new_audio_track) e.replaceTrack(new_audio_track);
-                }
-            });
+            if(client.peerConnection) 
+                client.peerConnection.getSenders().forEach(e => {
+                    if(e.track && e.track.kind == "audio") {
+                        if(new_audio_track) e.replaceTrack(new_audio_track);
+                    }
+                });
 
-            if(client.muted) {
+            if(client.muted) 
                 muteClient(stream);       
-            }
         });
     }
 
     const setVideoDevice = (source: MediaDeviceInfo) => {
-        console.log(`Updating to ${source.deviceId} and remaining keepstate`, client.currentAudio)
+        console.log(`Updating to`, source, `and remaining keepstate`, client.localStream.getAudioTracks()[0]);
+
         navigator.mediaDevices?.getUserMedia({
             audio: {
                 echoCancellation: true,
-                deviceId: client.currentAudio?.id
+                deviceId: client.localStream.getAudioTracks()[0].getCapabilities().deviceId
             },
             video: {
-                echoCancellation: true,
                 deviceId: source?.deviceId
             }
         }).then(async (stream: MediaStream) => {
@@ -366,16 +385,18 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
             });
 
             console.log(`[DEVICE]: New Video Device Set :: ${stream.getVideoTracks()[0].label}`)
+            console.log(`[DEVICE]: Current Devices: MIC::[${stream.getAudioTracks()[0].label}] VIDEO::[${stream.getVideoTracks()[0].label}]`)
 
             setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0] });
 
             const new_video_track = stream.getVideoTracks()[0];
 
-            client.peerConnection.getSenders().forEach(e => {
-                if(e.track && e.track.kind == "video") {
-                    if(new_video_track) e.replaceTrack(new_video_track);
-                }
-            });
+            if(client.peerConnection) 
+                client.peerConnection.getSenders().forEach(e => {
+                    if(e.track && e.track.kind == "video") {
+                        if(new_video_track) e.replaceTrack(new_video_track);
+                    }
+                });
 
             console.log(stream);
 

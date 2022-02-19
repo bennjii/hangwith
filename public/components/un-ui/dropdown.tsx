@@ -9,8 +9,6 @@ declare type NativeAttrs = Omit<React.InputHTMLAttributes<any>, keyof Props>;
 const DropDown: React.FC<Props & NativeAttrs> = ({ options, defaultValue, parameter, valueParameter, callback, ...args }) => {
     const input_ref = useRef<HTMLSelectElement>(null);
 
-    //     margin: 0;
-    //     width: calc(100% - 10px);
     return (
         <select
             className={styles.input}
@@ -18,6 +16,7 @@ const DropDown: React.FC<Props & NativeAttrs> = ({ options, defaultValue, parame
                 if(input_ref?.current) callback(input_ref.current.value)
             }}
             defaultValue={defaultValue}
+            value={defaultValue}
             ref={input_ref}
             style={{ margin: 0, width: 'calc(100% - 10px)' }}
             {...args}

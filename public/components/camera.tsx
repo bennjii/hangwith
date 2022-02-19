@@ -1,3 +1,5 @@
+import { supabase } from "@public/src/client";
+import useHangClient from "@public/src/hang_client";
 import { useEffect, useRef, useState } from "react";
 import styles from '../../styles/Home.module.css'
 import Loader from "./un-ui/loader";
@@ -8,11 +10,12 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
     const [ cameraOn, setCameraOn ] = useState(false);
     const video_ref = useRef<HTMLVideoElement>(null);
 
+    const { client } = useHangClient(supabase);
+
     useEffect(() => {
         setCameraOn(true);
         
         if(stream && video_ref.current && !video_ref.current.srcObject) {
-            console.log(stream);
             video_ref.current.srcObject = stream;
 
             if(stream.getAudioTracks().length > 0) {
@@ -54,7 +57,6 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
     }, [stream, video_ref]);
 
     useEffect(() => {
-        console.log(`Stream Change!`);
         if(!camera_stream) return;
 
         setStream(camera_stream);
@@ -70,12 +72,12 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
 
     return (
         <div style={{ height: height ?? 'inherit' }}>
+           
+           
             {
-                cameraOn 
-                ? 
-                <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
-                :
-                <Loader height={25} color={"#fff"}/>
+               client.localStream 
+               ? <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
+               : <div style={{ height: height ? height : 'inherit' }} className=" w-96 flex flex-col items-center justify-center flex-1 h-full"> <Loader height={25} color={"#fff"}/> </div>
             }
 
             {
