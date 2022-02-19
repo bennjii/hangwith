@@ -9,6 +9,7 @@ import DropDown from "./un-ui/dropdown";
 const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string }> = ({ _stream, muted, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice }) => {
     const [ stream, setStream ] = useState(_stream);
     const [ volume, setVolume ] = useState(0);
+    const [ ctx, setCtx ] = useState<AudioContext>();
 
     const video_ref = useRef<HTMLVideoElement>(null);
 
@@ -19,45 +20,18 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
         return "audioinput";
     }
     
-    useEffect(() => {
+    useEffect(() => {    
         if(type == "audio.in") {
-            var time = new Date().getTime();
-            
-            if(stream && video_ref.current && !video_ref.current.srcObject) {
-                video_ref.current.srcObject = stream;
+            if(stream && video_ref.current) {
+                if(!video_ref.current.srcObject) video_ref.current.srcObject = stream;
 
                 if(stream.getAudioTracks().length > 0) {
-                    const ctx = new AudioContext();
-                    
-                    ctx.audioWorklet.addModule("components/audio_processor.js").then(() => {
-                        const microphone = new AudioWorkletNode(ctx, "client-audio-processing", {
-                            numberOfInputs: 1,
-                            numberOfOutputs: 1
-                        });
+                    const asy = async () => {
+                        await ctx?.close();
+                        setCtx(createWorklet());
+                    }
 
-                        microphone.connect(ctx.destination);
-
-                        const src = ctx.createMediaStreamSource(stream);
-                        src.connect(microphone);
-
-                        const handleListener = (event: any) => {
-                            let _volume = 0
-                            if (event.data.volume)
-                                _volume = event.data.volume;
-
-                            const dt = new Date().getTime();
-                            if(dt-time > 25) { 
-                                setVolume(_volume);
-                                time = dt;
-                            }
-                        }
-
-                        microphone.port.onmessage = handleListener;
-
-                        return () => {
-                            microphone.port.removeEventListener("message", handleListener);
-                        };
-                    }).catch(e => console.error(e));
+                    asy();
                 }else {
                     setVolume(0);
                 }
@@ -65,10 +39,8 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
                 setVolume(0);
             }
         }else {
-            ///... do nothing?
             setVolume(0);
         }
-
     }, [stream, video_ref, type]);
 
     useEffect(() => {
@@ -84,6 +56,43 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
             _stream.removeEventListener("removetrack", () => setStream({ ..._stream }));
         }
     }, [_stream]);
+
+    const createWorklet = () => {
+        const _ctx = new AudioContext();
+        var time = new Date().getTime();
+
+        _ctx.audioWorklet.addModule("components/audio_processor.js").then(() => {
+            const microphone = new AudioWorkletNode(_ctx, "client-audio-processing", {
+                numberOfInputs: 1,
+                numberOfOutputs: 1
+            });
+
+            microphone.connect(_ctx.destination);
+
+            const src = _ctx.createMediaStreamSource(_stream);
+            src.connect(microphone);
+
+            const handleListener = (event: any) => {
+                let _volume = 0
+                if (event.data.volume)
+                    _volume = event.data.volume;
+
+                const dt = new Date().getTime();
+                if(dt-time > 25) { 
+                    setVolume(_volume);
+                    time = dt;
+                }
+            }
+
+            microphone.port.onmessage = handleListener;
+
+            return () => {
+                microphone.port.removeEventListener("message", handleListener);
+            };
+        }).catch(e => console.error(e));
+
+        return _ctx;
+    }
 
 
     return (

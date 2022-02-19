@@ -11,6 +11,7 @@ export type HangClient = {
     devices: MediaDeviceInfo[],
     currentAudio: MediaStreamTrack | null,
     currentVideo: MediaStreamTrack | null,
+    sinkDevice: MediaDeviceInfo | null,
 
     room_id: any,
     connected: boolean,
@@ -41,6 +42,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         devices: [],
         currentAudio: null,
         currentVideo: null,
+        sinkDevice: null,
         room_id: null,
         connected: false,
         muted: false
@@ -89,7 +91,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
 
                     // console.log(`Current `, stream.getAudioTracks()[0].getCapabilities().groupId)
 
-                    setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0] });
+                    setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0], sinkDevice: devices.find(e => e.kind == "audiooutput" && e.label.includes("Default")) ?? devices.find(e => e.kind == "audiooutput") ?? null });
                 });
             }else {
                 setClient({ ...client, localStream: new MediaStream() });
@@ -407,7 +409,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
     }
 
     const setSpeakerDevice = () => {
-
+      console.log(client.sinkDevice);  
     }
 
     return { 
