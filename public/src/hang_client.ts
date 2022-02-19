@@ -18,7 +18,7 @@ export type HangClient = {
     muted: boolean
 }
 
-const default_config = {
+export const default_config = {
     iceServers: [
         {
             urls: [
@@ -408,8 +408,8 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         });
     }
 
-    const setSpeakerDevice = () => {
-      console.log(client.sinkDevice);  
+    const setSpeakerDevice = (source: MediaDeviceInfo) => {
+        setClient({ ...client, sinkDevice: source })
     }
 
     return { 

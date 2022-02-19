@@ -28,10 +28,12 @@ export default class AudioProcessor extends AudioWorkletProcessor {
 		// Note that the input will be down-mixed to mono; however, if no inputs are
 		// connected then zero channels will be passed in.
 		if (input.length > 0) {
+			// console.log(inputs[0]);
+
 			const sum = input.reduce((acc, val) => acc + val.reduce((acc, val) => acc + Math.abs(val), 0), 0);
 			const rms = Math.sqrt(sum / (input[0].length + input[1].length));
 
-			this._volume = Math.min(rms, 0.5);
+			this._volume = Math.min(rms, 1);
 
 			// Update and sync the volume property with the main thread.
 			this._nextUpdateFrame -= input[0].length;

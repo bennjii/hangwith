@@ -47,7 +47,15 @@ const Home: NextPage = () => {
 					</div>
 
 					<div className="w-1/2 bg-[#181b20] min-h-full h-full rounded-lg overflow-hidden">
-						<Camera camera_stream={client.remoteStream} muted={false}></Camera>
+						{
+							(client.remoteStream?.getAudioTracks.length > 0) ?
+							<Camera camera_stream={client.remoteStream} muted={false}></Camera>
+							:
+							<div className="flex flex-1 h-full justify-center items-center">
+								+
+							</div>
+						}
+						
 					</div>
 				</div>
 

@@ -1,15 +1,16 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Mic, Speaker, Volume2 } from "react-feather";
+import { Check, Mic, Speaker, Volume2, X } from "react-feather";
 import styles from '../../styles/Home.module.css'
 import useHangClient, { HangClient } from "../src/hang_client";
 import { supabase } from '../../public/src/client'
 import DropDown from "./un-ui/dropdown";
 
-const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string }> = ({ _stream, muted, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice }) => {
+const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string, verificationCallback: Function, v: [number, number, number] }> = ({ _stream, muted, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice, verificationCallback, v }) => {
     const [ stream, setStream ] = useState(_stream);
     const [ volume, setVolume ] = useState(0);
     const [ ctx, setCtx ] = useState<AudioContext>();
+    const [ verif, setVerif ] = useState("awaiting");
 
     const video_ref = useRef<HTMLVideoElement>(null);
 
@@ -19,6 +20,24 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
         if(type == "video.in") return "videoinput";
         return "audioinput";
     }
+
+    useEffect(() => {
+        if((volume > 0.25 && type == "audio.in") || verif == "truthy") {
+            setVerif("truthy");
+
+            const b = v;
+            b[0] = 1;
+
+            verificationCallback([...b]);
+        }else {
+            setVerif("falsy");
+
+            const b = v;
+            b[0] = 2;
+
+            verificationCallback([...b]);
+        }
+    }, [volume, type]);
     
     useEffect(() => {    
         if(type == "audio.in") {
@@ -40,6 +59,36 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
             }
         }else {
             setVolume(0);
+        }
+        
+        if(type == "video.in") {
+            if(stream?.getVideoTracks()?.length) {
+                setVerif("truthy")
+                const b = v;
+                b[2] = 1;
+                verificationCallback([...b]);
+            }
+            else {
+                setVerif("falsy");
+                const b = v;
+                b[2] = 2;
+                verificationCallback([...b]);
+            }
+        }
+
+        if(type == "audio.out") {
+            if(client.sinkDevice?.deviceId) {
+                setVerif("truthy");
+                const b = v;
+                b[1] = 1;
+                verificationCallback([...b]);
+            }
+            else {
+                setVerif("falsy")
+                const b = v;
+                b[1] = 2;
+                verificationCallback([...b]);
+            }
         }
     }, [stream, video_ref, type]);
 
@@ -96,10 +145,10 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
 
 
     return (
-        <div className="flex flex-row items-center justify-between bg-[#101418] flex-1 p-1 rounded-lg w-full gap-4">   
+        <div className="flex flex-row items-center justify-between bg-[#101418] flex-1 p-1 rounded-lg w-full gap-0 pr-2">   
             <video style={{ display: 'none' }} ref={video_ref} autoPlay muted={muted}></video>
 
-            <div className="flex flex-center align-center bg-[#181b20] p-2 rounded-lg relative overflow-hidden">
+            <div className="flex flex-center align-center bg-[#181b20] p-2 rounded-lg relative overflow-hidden mr-2">
                 {
                     (() => {
                         switch(type) {
@@ -121,7 +170,7 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
                     })()
                 }
 
-                <div style={{ position: 'absolute', bottom: '0', left: '0', height: `${Math.round(volume * 100 * 2)}%`, width: '40px', transition: '0.1s ease all' }} className="bg-[#55b17c]"></div>
+                <div style={{ position: 'absolute', bottom: '0', left: '0', height: `${Math.round(volume * 100)}%`, width: '40px', transition: '0.1s ease all' }} className="bg-[#55b17c]"></div>
             </div>
 
             <div className="flex-1 text-white w-full">
@@ -140,6 +189,31 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
                         }}}
                     />
             </div>
+
+            {
+                (() => {
+                    switch(verif) {
+                        case "awaiting":
+                            return (
+                                <div className="h-7 w-7 rounded-xl items-center justify-center flex bg-orange-300">
+                                    <Image src={"/icons/waiting.svg"} alt="Checking" height={20} width={20} className="z-50"/>
+                                </div>
+                            )
+                        case "truthy":
+                            return (
+                                <div className="h-7 w-7 rounded-xl items-center justify-center flex bg-[#55b17c]">
+                                    <Image src={"/icons/check.svg"} alt="Working" height={20} width={20} className="z-50"/>
+                                </div>
+                            )
+                        case "falsy":
+                            return (
+                                <div className="h-7 w-7 rounded-xl items-center justify-center flex bg-red-400">
+                                    <Image src={"/icons/cross.svg"} alt="Working" height={20} width={20} className="z-50"/>
+                                </div>  
+                            )
+                    }
+                })()
+            }
         </div>
     )
 }

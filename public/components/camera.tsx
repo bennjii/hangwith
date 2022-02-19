@@ -1,6 +1,7 @@
 import { supabase } from "@public/src/client";
 import useHangClient from "@public/src/hang_client";
-import { useEffect, useRef, useState } from "react";
+import { HangClientContext } from "@root/pages";
+import { useContext, useEffect, useRef, useState } from "react";
 import styles from '../../styles/Home.module.css'
 import Loader from "./un-ui/loader";
 
@@ -10,7 +11,14 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
     const [ cameraOn, setCameraOn ] = useState(false);
     const video_ref = useRef<HTMLVideoElement>(null);
 
-    const { client } = useHangClient(supabase);
+    const client = useContext(HangClientContext);
+
+    useEffect(() => {
+        if(video_ref.current && client && client?.sinkDevice) {
+            //@ts-expect-error
+            video_ref?.current.setSinkId(client?.sinkDevice?.deviceId)
+        }
+    }, [client])
 
     useEffect(() => {
         setCameraOn(true);
@@ -72,10 +80,8 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
 
     return (
         <div style={{ height: height ?? 'inherit' }}>
-           
-           
             {
-               client.localStream 
+               true
                ? <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
                : <div style={{ height: height ? height : 'inherit' }} className=" w-96 flex flex-col items-center justify-center flex-1 h-full"> <Loader height={25} color={"#fff"}/> </div>
             }
