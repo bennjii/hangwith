@@ -86,11 +86,13 @@ const Home: NextPage<{ id: string }> = ({ id }) => {
 														return "Speakers"
 													case 2:
 														return "Camera"
+													default:
+														return null
 												}
 											}
 										})
-											.join(", ")
-											.substring(1)
+											.filter(e => e)
+											.join(",")
 											.replace(/, ([^,]*)$/, ' and $1')
 											.replace(/and ([^and]*)$/, '')
 									}
@@ -106,10 +108,11 @@ const Home: NextPage<{ id: string }> = ({ id }) => {
 					<div className="flex flex-col items-center justify-center bg-[#181b20] h-fit p-4 rounded-lg gap-4">
 						<div className="overflow-hidden rounded-xl">
 							<Camera 
-								camera_stream={client.localStream} 
+								_stream={client.localStream} 
 								muted={true} 
 								height={250}
-								audioBar={false}
+								show_audio_bar={false}
+								show_resolution={true}
 								></Camera>
 						</div>
 						

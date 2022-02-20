@@ -43,13 +43,21 @@ const Home: NextPage = () => {
 			<div className="flex flex-col gap-4 flex-1">
 				<div className="flex flex-row justify-evenly items-center p-20 w-full gap-4 flex-1">
 					<div className="w-1/2 bg-[#181b20] min-h-full h-full rounded-lg overflow-hidden">
-						<Camera camera_stream={client.localStream} muted={true}></Camera>
+						<Camera 
+							_stream={client.localStream} 
+							muted={true}
+							show_audio_bar={true}
+							></Camera>
 					</div>
 
 					<div className="w-1/2 bg-[#181b20] min-h-full h-full rounded-lg overflow-hidden">
 						{
-							(client.remoteStream?.getAudioTracks.length > 0) ?
-							<Camera camera_stream={client.remoteStream} muted={false}></Camera>
+							(client.remoteStream?.getAudioTracks().length > 0) ?
+								<Camera 
+									_stream={client.remoteStream} 
+									muted={false}
+									show_audio_bar={false}
+									></Camera>
 							:
 							<div className="flex flex-1 h-full justify-center items-center">
 								+

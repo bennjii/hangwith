@@ -22,20 +22,24 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
     }
 
     useEffect(() => {
-        if((volume > 0.25 && type == "audio.in") || verif == "truthy") {
-            setVerif("truthy");
-
-            const b = v;
-            b[0] = 1;
-
-            verificationCallback([...b]);
+        if(type == "audio.in" && stream?.getAudioTracks()?.[0]) {
+            if((volume > 0.2 && type == "audio.in") || verif == "truthy") {
+                setVerif("truthy");
+    
+                const b = v;
+                b[0] = 1;
+    
+                verificationCallback([...b]);
+            }else if(type == "audio.in") {
+                setVerif("awaiting");
+    
+                const b = v;
+                b[0] = 2;
+    
+                verificationCallback([...b]);
+            }
         }else {
-            setVerif("falsy");
-
-            const b = v;
-            b[0] = 2;
-
-            verificationCallback([...b]);
+            setVerif("falsy")
         }
     }, [volume, type]);
     
@@ -95,6 +99,7 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
     useEffect(() => {
         if(!_stream) return;
 
+        setVerif("awaiting");
         setStream(_stream);
 
         _stream.onaddtrack = () => setStream({ ..._stream });
@@ -143,7 +148,6 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
         return _ctx;
     }
 
-
     return (
         <div className="flex flex-row items-center justify-between bg-[#101418] flex-1 p-1 rounded-lg w-full gap-0 pr-2">   
             <video style={{ display: 'none' }} ref={video_ref} autoPlay muted={muted}></video>
@@ -180,6 +184,8 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
                         parameter={"label"} 
                         valueParameter={"groupId"}
                         callback={(e: any) => { {
+                            setVerif("awaiting");
+
                             const source = client.devices.find(__ => __.groupId == e && __.kind == refType());
                             if(source) { 
                                 if(audioCallback) audioCallback(source)

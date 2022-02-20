@@ -30,6 +30,20 @@ export const default_config = {
     iceCandidatePoolSize: 10,
 };
 
+const default_constraints = {
+    video: {
+        width: { ideal: 4096 },
+        height: { ideal: 2160 } 
+    },
+    audio: {
+        channelCount: 2,
+        echoCancellation: false,
+        latency: 0,
+        sampleRate: 48000,
+        sampleSize: 16
+    }
+}
+
 export const useHangClient = (supabase_client: SupabaseClient, configuration?: any) => {
     const [ client, setClient ] = useState<HangClient>({
         config: configuration  ? configuration : default_config,
@@ -71,16 +85,7 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
             if(navigator.mediaDevices) {
                 // getDisplayMedia for sharing screen. (Add Stream)
 
-                navigator.mediaDevices?.getUserMedia({
-                    video: true,
-                    audio: {
-                        channelCount: 2,
-                        echoCancellation: false,
-                        latency: 0,
-                        sampleRate: 48000,
-                        sampleSize: 16
-                    }
-                }).then(async (stream: MediaStream) => {
+                navigator.mediaDevices?.getUserMedia(default_constraints).then(async (stream: MediaStream) => {
                     const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
                         return e;
                     });
@@ -340,10 +345,11 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
         console.log(`Updating to`, source, ` and remaining keepstate`, client.localStream.getVideoTracks()[0])
         navigator.mediaDevices?.getUserMedia({
             video: {
+                ...default_constraints.video,
                 deviceId: client.localStream.getVideoTracks()[0].getCapabilities().deviceId
             },
             audio: {
-                echoCancellation: true,
+                ...default_constraints.audio,
                 deviceId: source?.deviceId                
             }
         }).then(async (stream: MediaStream) => {
@@ -375,10 +381,11 @@ export const useHangClient = (supabase_client: SupabaseClient, configuration?: a
 
         navigator.mediaDevices?.getUserMedia({
             audio: {
-                echoCancellation: true,
+                ...default_constraints.audio,
                 deviceId: client.localStream.getAudioTracks()[0].getCapabilities().deviceId
             },
             video: {
+                ...default_constraints.video,
                 deviceId: source?.deviceId
             }
         }).then(async (stream: MediaStream) => {

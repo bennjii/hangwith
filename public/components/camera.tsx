@@ -5,12 +5,15 @@ import { useContext, useEffect, useRef, useState } from "react";
 import styles from '../../styles/Home.module.css'
 import Loader from "./un-ui/loader";
 
-const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: number, audioBar?: boolean }> = ({ camera_stream, muted, height, audioBar=true }) => {
-    const [ stream, setStream ] = useState(camera_stream);
+const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, show_audio_bar?: boolean, show_resolution?: boolean }> = ({ _stream, muted, height, show_audio_bar=true, show_resolution=false }) => {
+    const [ stream, setStream ] = useState(_stream);
     const [ volume, setVolume ] = useState(0);
     const [ cameraOn, setCameraOn ] = useState(false);
-    const video_ref = useRef<HTMLVideoElement>(null);
+    const [ ctx, setCtx ] = useState<AudioContext>();
+    const [ resolution, setResolution ] = useState(0);
 
+    const video_ref = useRef<HTMLVideoElement>(null);
+    
     const client = useContext(HangClientContext);
 
     useEffect(() => {
@@ -23,63 +26,104 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
     useEffect(() => {
         setCameraOn(true);
         
-        if(stream && video_ref.current && !video_ref.current.srcObject) {
-            video_ref.current.srcObject = stream;
+        if(stream && video_ref.current) {
+            if(!video_ref.current.srcObject) video_ref.current.srcObject = stream;
 
             if(stream.getAudioTracks().length > 0) {
-                const ctx = new AudioContext();
-                
-                ctx.audioWorklet.addModule("components/audio_processor.js").then(() => {
-                    const microphone = new AudioWorkletNode(ctx, "client-audio-processing", {
-                        numberOfInputs: 1,
-                        numberOfOutputs: 1
-                    });
+                const asy = async () => {
+                    await ctx?.close();
+                    setCtx(createWorklet());
+                }
 
-                    microphone.connect(ctx.destination);
-
-                    const src = ctx.createMediaStreamSource(stream);
-                    src.connect(microphone);
-
-                    const handleListener = (event: any) => {
-                        let _volume = 0
-                        if (event.data.volume)
-                            _volume = event.data.volume;
-
-                        setVolume(_volume)
-                    }
-
-                    microphone.port.onmessage = handleListener;
-
-                    return () => {
-                        microphone.port.removeEventListener("message", handleListener);
-                    };
-                }).catch(e => console.error(e));
+                asy();
             }else {
                 setVolume(0);
             }
-        }else if(stream && video_ref.current) {
-            video_ref.current.srcObject = stream;
         }else {
             setVolume(0);
         }
     }, [stream, video_ref]);
 
     useEffect(() => {
-        if(!camera_stream) return;
+        if(!_stream) return;
 
-        setStream(camera_stream);
+        setStream(_stream);
+        setResolution(_stream?.getVideoTracks()?.[0]?.getCapabilities()?.height?.max ?? 0)
 
-        camera_stream.onaddtrack = () => setStream({ ...camera_stream });
-        camera_stream.onremovetrack = () => setStream({ ...camera_stream });
+        _stream.onaddtrack = () => setStream({ ..._stream });
+        _stream.onremovetrack = () => setStream({ ..._stream });
 
         return () => {
-            camera_stream.removeEventListener("addtrack", () => setStream({ ...camera_stream }));
-            camera_stream.removeEventListener("removetrack", () => setStream({ ...camera_stream }));
+            _stream.removeEventListener("addtrack", () => setStream({ ..._stream }));
+            _stream.removeEventListener("removetrack", () => setStream({ ..._stream }));
         }
-    }, [camera_stream]);
+    }, [_stream]);
+
+    const createWorklet = () => {
+        const _ctx = new AudioContext();
+        var time = new Date().getTime();
+
+        _ctx.audioWorklet.addModule("components/audio_processor.js").then(() => {
+            const microphone = new AudioWorkletNode(_ctx, "client-audio-processing", {
+                numberOfInputs: 1,
+                numberOfOutputs: 1
+            });
+
+            microphone.connect(_ctx.destination);
+
+            const src = _ctx.createMediaStreamSource(_stream);
+            src.connect(microphone);
+
+            const handleListener = (event: any) => {
+                let _volume = 0
+                if (event.data.volume)
+                    _volume = event.data.volume;
+
+                const dt = new Date().getTime();
+                if(dt-time > 25) { 
+                    setVolume(_volume);
+                    time = dt;
+                }
+            }
+
+            microphone.port.onmessage = handleListener;
+
+            return () => {
+                microphone.port.removeEventListener("message", handleListener);
+            };
+        }).catch(e => console.error(e));
+
+        return _ctx;
+    }
 
     return (
-        <div style={{ height: height ?? 'inherit' }}>
+        <div className="relative" style={{ height: height ?? 'inherit' }}>
+            {
+                show_resolution ? 
+                    <p className="absolute bottom-2 left-2 bg-gray-800 bg-opacity-80 px-2 py-1 rounded-lg text-white text-opacity-80">
+                        {
+                            (() => {
+                                switch(resolution) {
+                                    case 720:
+                                        return "720p"
+                                    case 1080:
+                                        return "1080p"
+                                    case 1440:
+                                        return "1440p"
+                                    case 2160:
+                                        return "4K"
+                                    case 4320:
+                                        return "8K"
+                                    default:
+                                        return `${resolution}p`
+                                }
+                            })()
+                        }
+                    </p>
+                :
+                    <></>
+            }
+            
             {
                true
                ? <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
@@ -87,7 +131,7 @@ const Camera: React.FC<{ camera_stream: MediaStream, muted: boolean, height?: nu
             }
 
             {
-                audioBar ? <div style={{ width: `${Math.round(volume * 100 * 2)}%` }} className={styles.talkingBar}></div> : <></>
+                show_audio_bar ? <div style={{ position: 'absolute', bottom: '0', left: '0', width: `${Math.round(volume * 100)}%`, height: '10px', transition: '0.1s ease all' }} className="bg-[#55b17c]"></div> : <></>
             }
         </div>
     )
