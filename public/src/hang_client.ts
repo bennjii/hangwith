@@ -18,6 +18,23 @@ export type HangClient = {
     muted: boolean
 }
 
+export interface HangClientParent<S> {
+    client: HangClient, 
+    createRoom: Function, 
+    joinRoom: Function, 
+    hangUp: Function, 
+    muteClient: Function,
+    unMuteClient: Function,
+    setAudioDevice: Function,
+    setVideoDevice: Function,
+    setSpeakerDevice: Function,
+}
+
+export type HangClientProps = {
+    supabase_client: SupabaseClient,
+    configuration?: RTCConfiguration 
+}
+
 export const default_config = {
     iceServers: [
         {
@@ -44,7 +61,7 @@ const default_constraints = {
     }
 }
 
-export const useHangClient = (supabase_client: SupabaseClient, configuration?: any) => {
+export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, configuration?: any): HangClientParent<HangClientProps> {
     const [ client, setClient ] = useState<HangClient>({
         config: configuration  ? configuration : default_config,
         //@ts-expect-error

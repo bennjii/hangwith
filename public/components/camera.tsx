@@ -42,6 +42,7 @@ const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, 
         }else {
             setVolume(0);
         }
+	// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [stream, video_ref]);
 
     useEffect(() => {

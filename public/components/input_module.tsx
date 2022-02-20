@@ -6,7 +6,7 @@ import useHangClient, { HangClient } from "../src/hang_client";
 import { supabase } from '../../public/src/client'
 import DropDown from "./un-ui/dropdown";
 
-const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string, verificationCallback: Function, v: [number, number, number] }> = ({ _stream, muted, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice, verificationCallback, v }) => {
+const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: number, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string, verificationCallback: Function, v: [number, number, number] }> = ({ _stream, muted, depth, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice, verificationCallback, v }) => {
     const [ stream, setStream ] = useState(_stream);
     const [ volume, setVolume ] = useState(0);
     const [ ctx, setCtx ] = useState<AudioContext>();
@@ -23,7 +23,7 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
 
     useEffect(() => {
         if(type == "audio.in" && stream?.getAudioTracks()?.[0]) {
-            if((volume > 0.2 && type == "audio.in") || verif == "truthy") {
+            if((volume > 0.15 && type == "audio.in") || verif == "truthy") {
                 setVerif("truthy");
     
                 const b = v;
@@ -41,6 +41,7 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
         }else {
             setVerif("falsy")
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [volume, type]);
     
     useEffect(() => {    
@@ -94,6 +95,7 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
                 verificationCallback([...b]);
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [stream, video_ref, type]);
 
     useEffect(() => {
@@ -115,7 +117,7 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, type: string
         const _ctx = new AudioContext();
         var time = new Date().getTime();
 
-        _ctx.audioWorklet.addModule("components/audio_processor.js").then(() => {
+        _ctx.audioWorklet.addModule(`${Array(depth+1).join("../")}components/audio_processor.js`).then(() => {
             const microphone = new AudioWorkletNode(_ctx, "client-audio-processing", {
                 numberOfInputs: 1,
                 numberOfOutputs: 1

@@ -7,15 +7,16 @@ import Input from '@components/un-ui/input'
 import Form from '@components/un-ui/form'
 import { supabase } from '@public/src/client'
 
-import { useHangClient } from '@public/src/hang_client'
+import { HangClientParent, useHangClient } from '@public/src/hang_client'
 import styles from '@styles/Home.module.css'
 import DropDown from '@public/components/un-ui/dropdown'
 import InputModule from '@public/components/input_module'
 import { useRouter } from 'next/dist/client/router'
 import Image from 'next/image'
 
-const Home: NextPage = () => {
-	const { client, createRoom, joinRoom, hangUp, muteClient, unMuteClient, setAudioDevice } = useHangClient(supabase);
+const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> = ({ id, hang_client }) => {
+	const { client, joinRoom, createRoom, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = hang_client;
+
 	const [ displayName, setDisplayName ] = useState("");
 	const router = useRouter();
 
@@ -36,7 +37,8 @@ const Home: NextPage = () => {
 					}
 				})
 		}
-	}, []);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [router.query.roomId]);
 	
   	return (
 		<div className="flex min-h-screen w-full bg-[#101418] font-sans p-24 flex-col">
@@ -110,7 +112,7 @@ const Home: NextPage = () => {
 					}
 
 					<Button 
-						onClick={() => hangUp().then(e => router.push('../../'))} 
+						onClick={() => hangUp().then(() => router.push('../../'))} 
 						icon={false}
 						className="flex justify-center items-center bg-red-500 p-4 rounded-full shadow-[0_0px_0px_3px_rgba(239, 68, 68,0.4)]"
 						> 

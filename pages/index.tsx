@@ -7,7 +7,7 @@ import Input from '../public/components/un-ui/input'
 import Form from '../public/components/un-ui/form'
 import { supabase } from '../public/src/client'
 
-import { HangClient, useHangClient } from '../public/src/hang_client'
+import { HangClient, HangClientParent, useHangClient } from '../public/src/hang_client'
 import styles from '../styles/Home.module.css'
 import DropDown from '../public/components/un-ui/dropdown'
 import InputModule from '../public/components/input_module'
@@ -25,8 +25,8 @@ export const getServerSideProps: GetServerSideProps = async () => {
 	}
 }
 
-const Home: NextPage<{ id: string }> = ({ id }) => {
-	const { client, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = useHangClient(supabase);
+const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ id, hang_client }) => {
+	const { client, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = hang_client;
 	const [ displayName, setDisplayName ] = useState("");
 	const [ date, setDate ] = useState(new Date());
 
@@ -116,9 +116,9 @@ const Home: NextPage<{ id: string }> = ({ id }) => {
 								></Camera>
 						</div>
 						
-						<InputModule _stream={client.localStream} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
-						<InputModule _stream={client.localStream} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client?.sinkDevice?.groupId ?? ""} verificationCallback={setVerified} v={verified} />
-						<InputModule _stream={client.localStream} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
+						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
+						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client?.sinkDevice?.groupId ?? ""} verificationCallback={setVerified} v={verified} />
+						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
 					</div>	
 				</div>
 			</div>
