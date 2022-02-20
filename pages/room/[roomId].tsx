@@ -30,7 +30,8 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 				.then(e => {
 					if(e.body) {
 						console.log("Joining Room")
-						joinRoom(router.query.roomId);
+						const room = router.query.roomId;
+						if(typeof room == "string" && room) joinRoom(room);
 					}else {
 						console.log("Creating Room!")
 						createRoom(rid)

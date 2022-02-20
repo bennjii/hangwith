@@ -20,13 +20,74 @@ export type HangClient = {
 
 export interface HangClientParent<S> {
     client: HangClient, 
-    createRoom: Function, 
-    joinRoom: Function, 
-    hangUp: Function, 
-    muteClient: Function,
-    unMuteClient: Function,
-    setAudioDevice: Function,
-    setVideoDevice: Function,
+    /**
+     * `async`
+     * Creates a private WebRTC 'room'.
+     * Requires a Room ID Parameter.
+     * 
+     * *Generating a Room ID*
+     * It is recommended to use `crypto.randomUUID()` on a backend service, such as in Next.js GetServerProps
+     * or using `uuidv4()`. 
+     * 
+     * @param rid Room ID (required) 
+     */
+    createRoom: (rid: string) => Promise<void>, 
+    /**
+     * `async`
+     * Joins a pre-made WebRTC 'room'.
+     * Requires a Room ID Parameter.
+     * 
+     * *Generating a Room ID*
+     * It is recommended to use `crypto.randomUUID()` on a backend service, such as in Next.js GetServerProps
+     * or using `uuidv4()`. 
+     * 
+     * @param room_id Room ID of existing room (required) 
+     */
+    joinRoom: (room_id: string) => Promise<void>, 
+    /**
+     * `async`
+     * Leaves the current WebRTC connection
+     * Removes all supabase and WebRTC conneections, removes remote stream connections, clears room if empty
+     * 
+     * *Generating a Room ID*
+     * It is recommended to use `crypto.randomUUID()` on a backend service, such as in Next.js GetServerProps
+     * or using `uuidv4()`. 
+     * 
+     * @returns "complete" string on complete
+     */
+    hangUp: () => Promise<string>, 
+    /**
+     * `synchronous`
+     * Mutes the current client
+     * 
+     */
+    muteClient: (stream?: MediaStream) => void,
+    /**
+     * `synchronous`
+     * UnMutes the current client
+     * 
+     */
+    unMuteClient: (stream?: MediaStream) => void,
+    /**
+     * `synchronous`
+     * Sets the current audio input device (audio.in)
+     * 
+     * @param source Media Device Source
+     */
+    setAudioDevice: (source: MediaDeviceInfo) => void,
+    /**
+     * `synchronous`
+     * Sets the current audio device (video.in)
+     * 
+     * @param source Media Device Source
+     */
+    setVideoDevice: (source: MediaDeviceInfo) => void,
+    /**
+     * `synchronous`
+     * Sets the current audio output device (audio.out)
+     * 
+     * @param source Media Device Source
+     */
     setSpeakerDevice: Function,
 }
 
@@ -35,7 +96,7 @@ export type HangClientProps = {
     configuration?: RTCConfiguration 
 }
 
-export const default_config = {
+export const default_config: Partial<RTCConfiguration> = {
     iceServers: [
         {
             urls: [
