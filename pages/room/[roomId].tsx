@@ -21,27 +21,29 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 	const router = useRouter();
 
 	useEffect(() => {
-		const rid = router?.query?.roomId;
+		if(client.localStream && !client.connected) {
+			const rid = router?.query?.roomId;
 		
-		if(rid && typeof rid == "string") {
-			supabase
-				.from('rooms')
-				.select("*")
-				.match({ room_id: rid })
-				.then(e => {
-					const data = e?.data?.[0];
+			if(rid && typeof rid == "string") {
+				supabase
+					.from('rooms')
+					.select("*")
+					.match({ room_id: rid })
+					.then(e => {
+						const data = e?.data?.[0];
 
-					if(data) {
-						console.log("Joining Room")
-						joinRoom(rid);
-					}else {
-						console.log("Creating Room!")
-						createRoom(rid);
-					}
-				});
+						if(data) {
+							console.log("Joining Room")
+							joinRoom(rid);
+						}else {
+							console.log("Creating Room!")
+							createRoom(rid);
+						}
+					});
+			}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [router.query.roomId]);
+	}, [client, router.query.roomId]);
 	
   	return (
 		<div className="flex min-h-screen w-full bg-[#101418] font-sans p-24 flex-col">

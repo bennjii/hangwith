@@ -128,9 +128,9 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
         //@ts-expect-error
         localStream: null,
         //@ts-expect-error
-        remoteStream: null,
+        remoteStream: process.browser ? new MediaStream() : null,
         //@ts-expect-error
-        peerConnection: null,
+        peerConnection: process.browser ? new RTCPeerConnection(configuration) : null,
         devices: [],
         currentAudio: null,
         currentVideo: null,
@@ -193,9 +193,7 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
     }, []);
 
     const createRoom = async (rid: string) => {  
-        setClient({ ...client, connected: true, peerConnection: new RTCPeerConnection(client.config)});
-
-        registerPeerConnectionListeners();
+        setClient({ ...client, connected: true, peerConnection: new RTCPeerConnection(client.config) });
 
         const room_id = 
             await supabase_client
@@ -259,11 +257,13 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
             });
                 
         // client.room_id = roomId;
-        setClient({ ...client, room_id: room_id });
+        setClient({ ...client, room_id: room_id, connected: true });
 
         client.peerConnection.addEventListener('track', event => {
             event.streams[0].getTracks().forEach(track => client.remoteStream.addTrack(track));
         });
+
+        registerPeerConnectionListeners();
 
         supabase_client
             .from(`rooms:room_id=eq.${room_id}`)
