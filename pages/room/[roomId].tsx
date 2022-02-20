@@ -24,19 +24,21 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 		const rid = router?.query?.roomId;
 		
 		if(rid && typeof rid == "string") {
-			supabase.from('rooms')
+			supabase
+				.from('rooms')
 				.select("*")
 				.match({ room_id: rid })
 				.then(e => {
-					if(e.body) {
+					const data = e?.data?.[0];
+
+					if(data) {
 						console.log("Joining Room")
-						const room = router.query.roomId;
-						if(typeof room == "string" && room) joinRoom(room);
+						joinRoom(rid);
 					}else {
 						console.log("Creating Room!")
-						createRoom(rid)
+						createRoom(rid);
 					}
-				})
+				});
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [router.query.roomId]);
@@ -51,7 +53,8 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 						<Camera 
 							_stream={client.localStream} 
 							muted={true}
-							show_audio_bar={true}
+							depth={1}
+							show_audio_bar={false}
 							></Camera>
 					</div>
 
@@ -61,6 +64,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 								<Camera 
 									_stream={client.remoteStream} 
 									muted={false}
+									depth={1}
 									show_audio_bar={false}
 									></Camera>
 							:

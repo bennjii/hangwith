@@ -34,12 +34,24 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: numbe
                 setVerif("awaiting");
     
                 const b = v;
-                b[0] = 2;
+                b[0] = 0;
     
                 verificationCallback([...b]);
             }
+        }else if(!stream){
+            setVerif("awaiting");
+    
+            const b = v;
+            b[0] = 0;
+    
+            verificationCallback([...b]);
         }else {
-            setVerif("falsy")
+            setVerif("falsy");
+
+            const b = v;
+            b[0] = 2;
+
+            verificationCallback([...b]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [volume, type]);
@@ -73,10 +85,19 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: numbe
                 b[2] = 1;
                 verificationCallback([...b]);
             }
-            else {
-                setVerif("falsy");
+            else if(!stream){
+                setVerif("awaiting");
+        
                 const b = v;
-                b[2] = 2;
+                b[0] = 0;
+        
+                verificationCallback([...b]);
+            }else {
+                setVerif("falsy");
+    
+                const b = v;
+                b[0] = 2;
+    
                 verificationCallback([...b]);
             }
         }
@@ -88,15 +109,24 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: numbe
                 b[1] = 1;
                 verificationCallback([...b]);
             }
-            else {
-                setVerif("falsy")
+            else if(!stream){
+                setVerif("awaiting");
+        
                 const b = v;
-                b[1] = 2;
+                b[0] = 0;
+        
+                verificationCallback([...b]);
+            }else {
+                setVerif("falsy");
+    
+                const b = v;
+                b[0] = 2;
+    
                 verificationCallback([...b]);
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [stream, video_ref, type]);
+    }, [, stream, video_ref, type]);
 
     useEffect(() => {
         if(!_stream) return;

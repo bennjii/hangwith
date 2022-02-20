@@ -42,7 +42,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 		<HangClientContext.Provider value={client}>
 			<div className="flex min-h-screen w-full bg-[#101418] font-sans">
 				<div className="flex flex-row justify-around flex-1 items-center">
-					<div className="flex flex-col items-start justify-center gap-8">
+					<div className="flex flex-col items-start justify-center gap-8 transition-all duration-150">
 						<a className="flex flex-row items-center text-white gap-1 text-opacity-30">powered by <h1 className="text-white">hangwith</h1></a>
 						
 						<div className="flex flex-col gap-2">
@@ -71,7 +71,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 							verified.reduce((a, b) => a*10 + b) == 111 ?
 							<></>
 							:
-								new Date().getTime() - date.getTime() > 1000 
+								client.localStream 
 								?
 								<p className="flex flex-row items-center gap-1 text-gray-400 text-sm">
 									Issues identified with {" "}
@@ -111,6 +111,8 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								_stream={client.localStream} 
 								muted={true} 
 								height={250}
+								width={444.44}
+								depth={0}
 								show_audio_bar={false}
 								show_resolution={true}
 								></Camera>

@@ -141,6 +141,10 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
     }); 
 
     useEffect(() => {
+        const start_time = new Date().getTime();
+
+        console.log(new Date().getTime() - start_time, "Start");
+
         setClient({
             config: configuration  ? configuration : default_config,
             //@ts-expect-error
@@ -159,23 +163,27 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
             muted: false
         });
 
+        console.log(new Date().getTime() - start_time, "Set Client");
+
         if(process.browser && !client.localStream) {
             if(navigator.mediaDevices) {
                 // getDisplayMedia for sharing screen. (Add Stream)
+                const asy = async () => {
+                    navigator.mediaDevices?.getUserMedia(default_constraints)
+                        .then(async (stream: MediaStream) => {
+                            console.log(new Date().getTime() - start_time, "Got Media");
 
-                navigator.mediaDevices?.getUserMedia(default_constraints).then(async (stream: MediaStream) => {
-                    const devices = await navigator.mediaDevices.enumerateDevices().then(e => {
-                        return e;
-                    });
+                            const devices = await navigator.mediaDevices.enumerateDevices();
 
-                    // devices.forEach(e => {
-                    //     console.log(`${e.groupId} ${e.label}`);
-                    // })
+                            console.log(new Date().getTime() - start_time, "Got Devices");
 
-                    // console.log(`Current `, stream.getAudioTracks()[0].getCapabilities().groupId)
+                            setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0], sinkDevice: devices.find(e => e.kind == "audiooutput" && e.label.includes("Default")) ?? devices.find(e => e.kind == "audiooutput") ?? null });
+                        }).finally(() => {
+                            console.log(new Date().getTime() - start_time, "Done.");
+                        }) 
+                }
 
-                    setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0], sinkDevice: devices.find(e => e.kind == "audiooutput" && e.label.includes("Default")) ?? devices.find(e => e.kind == "audiooutput") ?? null });
-                });
+                asy();
             }else {
                 setClient({ ...client, localStream: new MediaStream() });
                 throw new Error("Client Declined Media - Possibly Unsecure (http) Connection.");                
@@ -199,8 +207,7 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
                     return e.data?.[0].room_id;
                 });
         
-        // window.location.href = "./room/"+room_id;
-        // return;
+        console.log(`Created Room ${room_id}`)
 
         client.localStream?.getTracks().forEach(track => {
             console.log(track);
@@ -348,6 +355,9 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
                         client.peerConnection.addIceCandidate(new RTCIceCandidate(e))
                     })
                 }).subscribe()
+        }else {
+            console.error("No Room Found with ID", room_id);
+            return;
         }
     }
 

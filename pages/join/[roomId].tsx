@@ -99,6 +99,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								_stream={client.localStream} 
 								muted={true} 
 								height={250}
+								depth={1}
 								show_audio_bar={false}
 								show_resolution={true}
 								></Camera>

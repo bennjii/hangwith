@@ -15,7 +15,6 @@ const DropDown: React.FC<Props & NativeAttrs> = ({ options, defaultValue, parame
             onChange={() => {
                 if(input_ref?.current) callback(input_ref.current.value)
             }}
-            defaultValue={defaultValue}
             value={defaultValue}
             ref={input_ref}
             style={{ margin: 0, width: 'calc(100% - 10px)' }}

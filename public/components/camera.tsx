@@ -5,7 +5,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import styles from '../../styles/Home.module.css'
 import Loader from "./un-ui/loader";
 
-const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, show_audio_bar?: boolean, show_resolution?: boolean }> = ({ _stream, muted, height, show_audio_bar=true, show_resolution=false }) => {
+const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, width?: number, depth: number, show_audio_bar?: boolean, show_resolution?: boolean }> = ({ _stream, muted, height, width, depth, show_audio_bar=true, show_resolution=false }) => {
     const [ stream, setStream ] = useState(_stream);
     const [ volume, setVolume ] = useState(0);
     const [ cameraOn, setCameraOn ] = useState(false);
@@ -64,7 +64,7 @@ const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, 
         const _ctx = new AudioContext();
         var time = new Date().getTime();
 
-        _ctx.audioWorklet.addModule("components/audio_processor.js").then(() => {
+        _ctx.audioWorklet.addModule(`${Array(depth+1).join("../")}components/audio_processor.js`).then(() => {
             const microphone = new AudioWorkletNode(_ctx, "client-audio-processing", {
                 numberOfInputs: 1,
                 numberOfOutputs: 1
@@ -98,9 +98,9 @@ const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, 
     }
 
     return (
-        <div className="relative" style={{ height: height ?? 'inherit' }}>
+        <div className="relative bg-black" style={{ height: height ?? 'inherit' }}>
             {
-                show_resolution ? 
+                show_resolution && stream ? 
                     <p className="absolute bottom-2 left-2 bg-gray-800 bg-opacity-80 px-2 py-1 rounded-lg text-white text-opacity-80">
                         {
                             (() => {
@@ -126,9 +126,9 @@ const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, 
             }
             
             {
-               true
-               ? <video style={{ height: height ? height : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
-               : <div style={{ height: height ? height : 'inherit' }} className=" w-96 flex flex-col items-center justify-center flex-1 h-full"> <Loader height={25} color={"#fff"}/> </div>
+               stream
+               ? <video style={{ height: height ? height : 'inherit', width: width ? width : 'inherit' }} ref={video_ref} autoPlay muted={muted}></video>
+               : <div style={{ height: height ? height : 'inherit', width: width ? width : 'inherit' }} className=" w-96 flex flex-col items-center justify-center flex-1 h-full"> <Loader height={25} color={"#fff"}/> </div>
             }
 
             {
