@@ -47,7 +47,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								/>
 
 							<Button 
-								onClick={() => router.push(`./room/${router?.query?.roomId}`)} 
+								onClick={() => router.push(`../room/${router?.query?.roomId}`)} 
 								icon={false}
 								className="flex flex-row w-full bg-blue-700 justify-center rounded-lg px-4 py-2 text-white text-opacity-80 text-[.9rem] font-light outline-none shadow-md shadow-transparent focus:shadow-[0_0px_0px_3px_rgba(95,150,255,0.2)]"
 								>
@@ -99,6 +99,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								_stream={client.localStream} 
 								muted={true} 
 								height={250}
+								width={444.44}
 								depth={1}
 								show_audio_bar={false}
 								show_resolution={true}

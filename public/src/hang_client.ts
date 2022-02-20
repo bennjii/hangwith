@@ -142,48 +142,23 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
 
     useEffect(() => {
         const start_time = new Date().getTime();
-
         console.log(new Date().getTime() - start_time, "Start");
-
-        setClient({
-            config: configuration  ? configuration : default_config,
-            //@ts-expect-error
-            localStream: null,
-            //@ts-expect-error
-            remoteStream: process.browser ? new MediaStream() : null,
-            //@ts-expect-error
-            peerConnection: process.browser ? new RTCPeerConnection(configuration) : null,
-
-            devices: [],
-            currentAudio: null,
-            currentVideo: null,
-
-            room_id: null,
-            connected: false,
-            muted: false
-        });
-
-        console.log(new Date().getTime() - start_time, "Set Client");
 
         if(process.browser && !client.localStream) {
             if(navigator.mediaDevices) {
                 // getDisplayMedia for sharing screen. (Add Stream)
-                const asy = async () => {
-                    navigator.mediaDevices?.getUserMedia(default_constraints)
-                        .then(async (stream: MediaStream) => {
-                            console.log(new Date().getTime() - start_time, "Got Media");
+                navigator.mediaDevices?.getUserMedia(default_constraints)
+                    .then(async (stream: MediaStream) => {
+                        console.log(new Date().getTime() - start_time, "Got Media");
 
-                            const devices = await navigator.mediaDevices.enumerateDevices();
+                        const devices = await navigator.mediaDevices.enumerateDevices();
 
-                            console.log(new Date().getTime() - start_time, "Got Devices");
+                        console.log(new Date().getTime() - start_time, "Got Devices");
 
-                            setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0], sinkDevice: devices.find(e => e.kind == "audiooutput" && e.label.includes("Default")) ?? devices.find(e => e.kind == "audiooutput") ?? null });
-                        }).finally(() => {
-                            console.log(new Date().getTime() - start_time, "Done.");
-                        }) 
-                }
-
-                asy();
+                        setClient({ ...client, localStream: stream, devices, currentAudio: stream.getAudioTracks()[0], currentVideo: stream.getVideoTracks()[0], sinkDevice: devices.find(e => e.kind == "audiooutput" && e.label.includes("Default")) ?? devices.find(e => e.kind == "audiooutput") ?? null });
+                    }).finally(() => {
+                        console.log(new Date().getTime() - start_time, "Done.");
+                    }) 
             }else {
                 setClient({ ...client, localStream: new MediaStream() });
                 throw new Error("Client Declined Media - Possibly Unsecure (http) Connection.");                
@@ -194,6 +169,8 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
 
     const createRoom = async (rid: string) => {  
         setClient({ ...client, connected: true, peerConnection: new RTCPeerConnection(client.config) });
+
+        registerPeerConnectionListeners();
 
         const room_id = 
             await supabase_client
@@ -262,8 +239,6 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
         client.peerConnection.addEventListener('track', event => {
             event.streams[0].getTracks().forEach(track => client.remoteStream.addTrack(track));
         });
-
-        registerPeerConnectionListeners();
 
         supabase_client
             .from(`rooms:room_id=eq.${room_id}`)

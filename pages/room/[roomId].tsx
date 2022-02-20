@@ -62,17 +62,17 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 
 					<div className="w-1/2 bg-[#181b20] min-h-full h-full rounded-lg overflow-hidden">
 						{
-							(client.remoteStream?.getAudioTracks().length > 0) ?
-								<Camera 
-									_stream={client.remoteStream} 
-									muted={false}
-									depth={1}
-									show_audio_bar={false}
-									></Camera>
-							:
-							<div className="flex flex-1 h-full justify-center items-center">
-								+
-							</div>
+							<Camera 
+								_stream={client.remoteStream} 
+								muted={false}
+								depth={1}
+								show_audio_bar={false}
+								show_resolution={true}
+								></Camera>
+							// :
+							// <div className="flex flex-1 h-full justify-center items-center">
+							// 	+
+							// </div>
 						}
 						
 					</div>
