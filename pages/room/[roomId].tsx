@@ -28,8 +28,10 @@ const Home: NextPage = () => {
 				.match({ room_id: rid })
 				.then(e => {
 					if(e.body) {
+						console.log("Joining Room")
 						joinRoom(router.query.roomId);
 					}else {
+						console.log("Creating Room!")
 						createRoom(rid)
 					}
 				})
