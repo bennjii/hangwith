@@ -51,6 +51,8 @@ const Camera: React.FC<{ _stream: MediaStream, muted: boolean, height?: number, 
         setStream(_stream);
         setResolution(_stream?.getVideoTracks()?.[0]?.getCapabilities()?.height?.max ?? 0)
 
+        console.log("Camera Update Received.", _stream)
+
         _stream.onaddtrack = () => setStream({ ..._stream });
         _stream.onremovetrack = () => setStream({ ..._stream });
 

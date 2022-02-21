@@ -23,6 +23,8 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 	useEffect(() => {
 		if(client.localStream && !client.connected) {
 			const rid = router?.query?.roomId;
+
+			console.log("Beginning Primary Initiation Phase ", rid);
 		
 			if(rid && typeof rid == "string") {
 				supabase
@@ -67,12 +69,8 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 								muted={false}
 								depth={1}
 								show_audio_bar={false}
-								show_resolution={true}
+								show_resolution={false}
 								></Camera>
-							// :
-							// <div className="flex flex-1 h-full justify-center items-center">
-							// 	+
-							// </div>
 						}
 						
 					</div>

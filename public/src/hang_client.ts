@@ -185,7 +185,7 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
         console.log(`Created Room ${room_id}`)
 
         client.localStream?.getTracks().forEach(track => {
-            console.log(track);
+            console.log("Adding Track:", track);
             client.peerConnection.addTrack(track, client.localStream);
         });
 
@@ -237,7 +237,10 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
         setClient({ ...client, room_id: room_id, connected: true });
 
         client.peerConnection.addEventListener('track', event => {
-            event.streams[0].getTracks().forEach(track => client.remoteStream.addTrack(track));
+            event.streams[0].getTracks().forEach(track => {
+                console.log("Adding External Track:", track);
+                client.remoteStream.addTrack(track);
+            });
         });
 
         supabase_client
@@ -275,6 +278,7 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
             registerPeerConnectionListeners();
 
             client.localStream.getTracks().forEach(track => {
+                console.log("Adding Local Track:", track);
                 client.peerConnection.addTrack(track, client.localStream);
             });
 
@@ -303,7 +307,10 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
             }); 
 
             client.peerConnection.addEventListener('track', event => {
-                event.streams[0].getTracks().forEach(track => client.remoteStream.addTrack(track));
+                event.streams[0].getTracks().forEach(track => {
+                    console.log("Adding External Track", track)
+                    client.remoteStream.addTrack(track)
+                })
             });
 
             await client.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
@@ -355,6 +362,7 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
         console.log(supabase_client);
 
         setClient({ ...client, connected: false, room_id: null, peerConnection: new RTCPeerConnection(client.config) });
+        
         return "complete";
     }
 

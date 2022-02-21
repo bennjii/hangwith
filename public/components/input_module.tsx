@@ -89,14 +89,14 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: numbe
                 setVerif("awaiting");
         
                 const b = v;
-                b[0] = 0;
+                b[2] = 0;
         
                 verificationCallback([...b]);
             }else {
                 setVerif("falsy");
     
                 const b = v;
-                b[0] = 2;
+                b[2] = 2;
     
                 verificationCallback([...b]);
             }
@@ -113,14 +113,14 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: numbe
                 setVerif("awaiting");
         
                 const b = v;
-                b[0] = 0;
+                b[1] = 0;
         
                 verificationCallback([...b]);
             }else {
                 setVerif("falsy");
     
                 const b = v;
-                b[0] = 2;
+                b[1] = 2;
     
                 verificationCallback([...b]);
             }
@@ -230,20 +230,20 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: numbe
 
             {
                 (() => {
-                    switch(verif) {
-                        case "awaiting":
+                    switch(v[type == "audio.in" ? 0 : type == "audio.out" ? 1 : 2]) {
+                        case 0:
                             return (
                                 <div className="h-7 w-7 rounded-xl items-center justify-center flex bg-orange-300">
                                     <Image src={"/icons/waiting.svg"} alt="Checking" height={20} width={20} className="z-50"/>
                                 </div>
                             )
-                        case "truthy":
+                        case 1:
                             return (
                                 <div className="h-7 w-7 rounded-xl items-center justify-center flex bg-[#55b17c]">
                                     <Image src={"/icons/check.svg"} alt="Working" height={20} width={20} className="z-50"/>
                                 </div>
                             )
-                        case "falsy":
+                        case 2:
                             return (
                                 <div className="h-7 w-7 rounded-xl items-center justify-center flex bg-red-400">
                                     <Image src={"/icons/cross.svg"} alt="Working" height={20} width={20} className="z-50"/>
