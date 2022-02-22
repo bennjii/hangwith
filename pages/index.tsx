@@ -118,9 +118,9 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								></Camera>
 						</div>
 						
-						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
-						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client?.sinkDevice?.groupId ?? ""} verificationCallback={setVerified} v={verified} />
-						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
+						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} hang_client={hang_client} />
+						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client?.sinkDevice?.groupId ?? ""} verificationCallback={setVerified} v={verified} hang_client={hang_client} />
+						<InputModule _stream={client.localStream} depth={0} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} hang_client={hang_client} />
 					</div>	
 				</div>
 			</div>

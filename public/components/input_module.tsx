@@ -2,11 +2,11 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Check, Mic, Speaker, Volume2, X } from "react-feather";
 import styles from '../../styles/Home.module.css'
-import useHangClient, { HangClient } from "../src/hang_client";
+import useHangClient, { HangClient, HangClientParent } from "../src/hang_client";
 import { supabase } from '../../public/src/client'
 import DropDown from "./un-ui/dropdown";
 
-const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: number, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string, verificationCallback: Function, v: [number, number, number] }> = ({ _stream, muted, depth, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice, verificationCallback, v }) => {
+const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: number, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string, verificationCallback: Function, v: [number, number, number], hang_client: HangClientParent<null> }> = ({ _stream, muted, depth, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice, verificationCallback, v, hang_client }) => {
     const [ stream, setStream ] = useState(_stream);
     const [ volume, setVolume ] = useState(0);
     const [ ctx, setCtx ] = useState<AudioContext>();
@@ -189,9 +189,10 @@ const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: numbe
                     (() => {
                         switch(type) {
                             case "audio.in":
-                                return (
-                                    <Image src={"/icons/mic.svg"} alt="Microphone On" height={20} width={20} className="z-50"/>
-                                )
+                                return _stream?.getAudioTracks()?.[0]?.enabled ?
+                                    <Image src={"/icons/mic.svg"} alt="Microphone On" height={20} width={20} className="z-50" onClick={() => hang_client.muteClient()} />
+                                    :
+                                    <Image src={"/icons/muted.svg"} alt="Microphone On" height={20} width={20} className="z-50" onClick={() => hang_client.unMuteClient()}/>
                             case "audio.out":
                                 return (
                                     <Image src={"/icons/speaker.svg"} alt="Speaker On" height={20} width={20} className="z-50"/>
