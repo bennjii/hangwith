@@ -5,7 +5,6 @@ import Camera from '../public/components/camera'
 import Button from '../public/components/un-ui/button'
 import Input from '../public/components/un-ui/input'
 import Form from '../public/components/un-ui/form'
-import { supabase } from '../public/src/client'
 
 import { HangClient, HangClientParent, useHangClient } from '../public/src/hang_client'
 import styles from '../styles/Home.module.css'
@@ -13,6 +12,7 @@ import DropDown from '../public/components/un-ui/dropdown'
 import InputModule from '../public/components/input_module'
 import { useRouter } from 'next/dist/client/router'
 import { randomUUID } from 'crypto'
+import { Query, RTQueryHandler, subscriptions } from '@public/src/rtq'
 
 //@ts-expect-error
 export const HangClientContext = createContext<HangClient>(null);

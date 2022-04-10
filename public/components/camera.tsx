@@ -1,4 +1,3 @@
-import { supabase } from "@public/src/client";
 import useHangClient from "@public/src/hang_client";
 import { HangClientContext } from "@root/pages";
 import { useContext, useEffect, useRef, useState } from "react";

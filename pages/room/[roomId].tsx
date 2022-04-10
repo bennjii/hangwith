@@ -5,7 +5,6 @@ import Camera from '@components/camera'
 import Button from '@components/un-ui/button'
 import Input from '@components/un-ui/input'
 import Form from '@components/un-ui/form'
-import { supabase } from '@public/src/client'
 
 import { HangClientParent, useHangClient } from '@public/src/hang_client'
 import styles from '@styles/Home.module.css'
@@ -13,9 +12,10 @@ import DropDown from '@public/components/un-ui/dropdown'
 import InputModule from '@public/components/input_module'
 import { useRouter } from 'next/dist/client/router'
 import Image from 'next/image'
+import { Query } from '@public/src/rtq'
 
 const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> = ({ id, hang_client }) => {
-	const { client, joinRoom, createRoom, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = hang_client;
+	const { ws, client, joinRoom, createRoom, hangUp, muteClient, unMuteClient, setAudioDevice, setVideoDevice, setSpeakerDevice } = hang_client;
 
 	const [ displayName, setDisplayName ] = useState("");
 	const router = useRouter();
@@ -27,21 +27,20 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 			console.log("Beginning Primary Initiation Phase ", rid);
 		
 			if(rid && typeof rid == "string") {
-				supabase
-					.from('rooms')
-					.select("*")
-					.match({ room_id: rid })
-					.then(e => {
-						const data = e?.data?.[0];
+				new Query(ws).in(rid).get("all")
+				.then(e => {
+					console.log(e);
 
-						if(data) {
-							console.log("Joining Room")
-							joinRoom(rid);
-						}else {
-							console.log("Creating Room!")
-							createRoom(rid);
-						}
-					});
+					const data = e.response.message !== "404" && e.response.message !== "406"; 
+
+					if(data) {
+						console.log("Joining Room")
+						joinRoom(rid);
+					}else {
+						console.log("Creating Room!")
+						createRoom(rid);
+					}
+				})
 			}
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps

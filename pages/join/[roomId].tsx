@@ -51,7 +51,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								icon={false}
 								className="flex flex-row w-full bg-blue-700 justify-center rounded-lg px-4 py-2 text-white text-opacity-80 text-[.9rem] font-light outline-none shadow-md shadow-transparent focus:shadow-[0_0px_0px_3px_rgba(95,150,255,0.2)]"
 								>
-									Create Room
+									Join Room
 								</Button>
 						</Form>
 
@@ -106,9 +106,9 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								></Camera>
 						</div>
 						
-						<InputModule _stream={client.localStream} depth={1} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
-						<InputModule _stream={client.localStream} depth={1} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client?.sinkDevice?.groupId ?? ""} verificationCallback={setVerified} v={verified} />
-						<InputModule _stream={client.localStream} depth={1} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
+						<InputModule hang_client={hang_client} _stream={client.localStream} depth={1} client={client} muted={true} audioCallback={setAudioDevice} type="audio.in" defaultDevice={client?.currentAudio?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
+						<InputModule hang_client={hang_client} _stream={client.localStream} depth={1} client={client} muted={true} speakerCallback={setSpeakerDevice} type="audio.out" defaultDevice={client?.sinkDevice?.groupId ?? ""} verificationCallback={setVerified} v={verified} />
+						<InputModule hang_client={hang_client} _stream={client.localStream} depth={1} client={client} muted={true} videoCallback={setVideoDevice} type="video.in" defaultDevice={client?.currentVideo?.getCapabilities().groupId ?? ""} verificationCallback={setVerified} v={verified} />
 					</div>	
 				</div>
 			</div>

@@ -1,6 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from "crypto";
 import { useEffect, useState } from "react";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { Query, RTQueryHandler, subscriptions } from "./rtq";
+import { Response } from "../@types";
 
 export type HangClient = {
     config: any,
@@ -15,11 +16,13 @@ export type HangClient = {
 
     room_id: any,
     connected: boolean,
-    muted: boolean
+    muted: boolean,
 }
 
 export interface HangClientParent<S> {
     client: HangClient, 
+    ws: RTQueryHandler
+
     /**
      * `async`
      * Creates a private WebRTC 'room'.
@@ -31,7 +34,7 @@ export interface HangClientParent<S> {
      * 
      * @param rid Room ID (required) 
      */
-    createRoom: (rid: string) => Promise<void>, 
+    createRoom: (rid?: string) => Promise<void>, 
     /**
      * `async`
      * Joins a pre-made WebRTC 'room'.
@@ -47,7 +50,7 @@ export interface HangClientParent<S> {
     /**
      * `async`
      * Leaves the current WebRTC connection
-     * Removes all supabase and WebRTC conneections, removes remote stream connections, clears room if empty
+     * Removes all websocket and WebRTC connections, removes remote stream connections, clears room if empty
      * 
      * *Generating a Room ID*
      * It is recommended to use `crypto.randomUUID()` on a backend service, such as in Next.js GetServerProps
@@ -92,8 +95,8 @@ export interface HangClientParent<S> {
 }
 
 export type HangClientProps = {
-    supabase_client: SupabaseClient,
-    configuration?: RTCConfiguration 
+    configuration?: RTCConfiguration,
+    ws: RTQueryHandler
 }
 
 export const default_config: Partial<RTCConfiguration> = {
@@ -133,7 +136,7 @@ const default_constraints = {
     }
 }
 
-export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, configuration?: any): HangClientParent<HangClientProps> {
+export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration?: any): HangClientParent<HangClientProps> {
     const [ client, setClient ] = useState<HangClient>({
         config: configuration  ? configuration : default_config,
         //@ts-expect-error
@@ -178,21 +181,15 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const createRoom = async (rid: string) => {  
+    const createRoom = async (rid?: string) => {  
         setClient({ ...client, connected: true, peerConnection: new RTCPeerConnection(client.config) });
 
         registerPeerConnectionListeners();
 
-        const room_id = 
-            await supabase_client
-                .from('rooms')
-                .insert({
-                    room_id: rid
-                })
-                .then(e => { 
-                    return e.data?.[0].room_id;
-                });
-        
+        const room_id = rid ? rid : randomUUID();
+        console.log("sending query (room)", room_id);
+
+        await new Query(ws).in(room_id).set("room");
         console.log(`Created Room ${room_id}`)
 
         client.localStream?.getTracks().forEach(track => {
@@ -203,48 +200,35 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
         // For adding video sharing, simply gather the stream, and add the individual tracks.
 
         // Collect ICE candidates
-        client.peerConnection.addEventListener('icecandidate', event => {
+        const candidates: RTCIceCandidateInit[] = [];
+
+        client.peerConnection.addEventListener('icecandidate', async event => {
             if(!event.candidate) return;  
+            candidates.push(event.candidate?.toJSON());
+        }); 
 
-            supabase_client
-                .from('rooms')
-                .select()
-                .match({ room_id: room_id })
-                .then(e => {
-                    const data = e.data?.[0];
-
-                    if(data) {
-                        const new_callers = data.caller_candidates
-                              new_callers.push(event.candidate?.toJSON());
-
-                        supabase_client
-                            .from('rooms')
-                            .update({ caller_candidates: new_callers })
-                            .match({ room_id: room_id })
-                            .then(e => e.error && console.error("Supabase Client update threw error when adding ice-candidate: ", e))
-                    }
-                })
+        client.peerConnection.addEventListener("icegatheringstatechange", async (e) => {
+            if(client.peerConnection.iceGatheringState == "complete") {
+                await new Query(ws).in(room_id).update("caller_candidates", JSON.stringify(candidates));
+            }
         });
 
         // Create a room
         const offer = await client.peerConnection.createOffer();
         await client.peerConnection.setLocalDescription(offer);
 
-        // Create a new supabase room with 'roomWithOffer' value. Store the generated return room's id.
-        await supabase_client
-            .from('rooms')
-            .update({
-                offer: {
-                    type: offer.type,
-                    sdp: offer.sdp
-                },
-            })
-            .match({ room_id: room_id })
-            .then(e => { 
-                return e.data?.[0].room_id;
-            });
+        // Create a new room with 'roomWithOffer' value. Store the generated return room's id.
+        console.log("sending query update (offer)", "offer." + JSON.stringify({
+            type: offer.type,
+            sdp: offer.sdp
+        }));
+
+        await new Query(ws).in(room_id).update("offer", JSON.stringify({
+            type: offer.type,
+            sdp: offer.sdp
+        }));
                 
-        // client.room_id = roomId;
+        client.room_id = room_id;
         setClient({ ...client, room_id: room_id, connected: true });
 
         client.peerConnection.addEventListener('track', event => {
@@ -254,37 +238,38 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
             });
         });
 
-        supabase_client
-            .from(`rooms:room_id=eq.${room_id}`)
-            .on("*", async payload => {
-                const data = payload.new;
+        await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response, ref: Query }) => {
+            console.log(payload.response);
 
-                if(payload.eventType == "DELETE") { hangUp(); return; } 
+            // TODO: Implement Delete Handling...
+            // if(payload.response.type == "delete") {}
+            const data = payload.response.content?.Room;
 
-                if(!client.peerConnection.currentRemoteDescription && data && data.answer) {
-                    const rtcSessionDescription = new RTCSessionDescription(data.answer);
+            if(data?.answer) {
+                const answer = JSON.parse(data.answer) as RTCSessionDescription;
+
+                if(!client.peerConnection.currentRemoteDescription && data && answer) {
+                    const rtcSessionDescription = new RTCSessionDescription(answer);
                     await client.peerConnection.setRemoteDescription(rtcSessionDescription);
                 }
+            }
 
-                if(payload.old?.callee_candidates !== payload.new?.callee_candidates) {
-                    data.callee_candidates.forEach((candidate: RTCIceCandidateInit) => {
+            if(data?.callee_candidates) {
+                const candidates = JSON.parse(data.callee_candidates);
+                if(payload.response.type.includes("callee_candidates")) {
+                    candidates.forEach((candidate: RTCIceCandidateInit) => {
                         client.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
                     });
                 }
-            }).subscribe()
+            }
+        });
     }
 
     const joinRoom = async (room_id: any) => {  
-        const data = await supabase_client
-            .from('rooms')
-            .select()
-            .match({ room_id: room_id })
-            .then(e => {
-                return e?.data?.[0];
-            });
+        const data = await new Query(ws).in(room_id).get("all")
 
         if(data) {
-            setClient({ ...client, peerConnection: new RTCPeerConnection(client.config), connected: true, room_id: data.room_id })
+            setClient({ ...client, peerConnection: new RTCPeerConnection(client.config), connected: true, room_id: data.response.location })
 
             registerPeerConnectionListeners();
 
@@ -293,29 +278,19 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
                 client.peerConnection.addTrack(track, client.localStream);
             });
 
-            client.peerConnection.addEventListener('icecandidate', event => {
-                if (!event.candidate) return;
+            const candidates: RTCIceCandidateInit[] = [];
 
-                // Maybe quite expensive task given 4 way ping.
-                supabase_client
-                    .from('rooms')
-                    .select()
-                    .match({ room_id: room_id })
-                    .then(e => {
-                        const data = e.data?.[0];
+            client.peerConnection.addEventListener('icecandidate', async event => {
+                if(!event.candidate) return;  
 
-                        if(data) {
-                            const new_callees = data.callee_candidates
-                                  new_callees.push(event.candidate?.toJSON());
-
-                            supabase_client
-                                .from('rooms')
-                                .update({ callee_candidates: new_callees })
-                                .match({ room_id: room_id })
-                                .then(e => e.error && console.error("Supabase Client update threw error when adding ice-candidate: ", e))
-                        }
-                    })
+                candidates.push(event.candidate?.toJSON());
             }); 
+
+            client.peerConnection.addEventListener("icegatheringstatechange", async (e) => {
+                if(client.peerConnection.iceGatheringState == "complete") {
+                    await new Query(ws).in(room_id).update("callee_candidates", JSON.stringify(candidates));
+                }
+            });
 
             client.peerConnection.addEventListener('track', event => {
                 event.streams[0].getTracks().forEach(track => {
@@ -324,30 +299,32 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
                 })
             });
 
-            await client.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+            await client.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.response.content?.Room?.offer as string) as RTCSessionDescriptionInit));
 
             const answer = await client.peerConnection.createAnswer();
             await client.peerConnection.setLocalDescription(answer);
 
-            await supabase_client
-                .from('rooms')
-                .update({ 
-                    answer: {
-                        type: answer.type,
-                        sdp: answer.sdp,
-                    },
-                })
-                .match({ room_id: room_id })
+            await new Query(ws).in(room_id).update("answer", JSON.stringify({
+                type: answer.type,
+                sdp: answer.sdp,
+            }));
 
-                supabase_client
-                .from(`rooms:room_id=eq.${room_id}`)
-                .on("*", async payload => {
-                    if(payload.eventType == "DELETE") { hangUp(); return; }
-
-                    payload.new.caller_candidates.forEach((e: RTCIceCandidateInit) => {
-                        client.peerConnection.addIceCandidate(new RTCIceCandidate(e))
-                    })
-                }).subscribe()
+            await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response, ref: Query }) => {
+                console.log(payload.response);
+    
+                // TODO: Implement Delete Handling...
+                // if(payload.response.type == "delete") { hangUp(); return; }
+                const data = payload.response.content?.Room;
+                if(data?.caller_candidates) {
+                    const candidates = JSON.parse(data.caller_candidates);
+        
+                    if(payload.response.type.includes("caller_candidates")) {
+                        candidates.forEach((candidate: RTCIceCandidateInit) => {
+                            client.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                        });
+                    }
+                }
+            });
         }else {
             console.error("No Room Found with ID", room_id);
             return;
@@ -355,22 +332,18 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
     }
 
     const hangUp = async () => {    
-        await supabase_client.getSubscriptions().forEach(subscription => subscription.unsubscribe());
+        const index = subscriptions.findIndex(e => e.location == client.room_id);
+        subscriptions.splice(index, 1);
 
-        // client.localStream.getTracks().forEach(track => track.stop());
+        client.localStream.getTracks().forEach(track => track.stop());
 
         if (client.remoteStream)   client.remoteStream.getTracks().forEach(track => track.stop());
         if (client.peerConnection) client.peerConnection.close();
-        if (client.room_id) {
-            // await supabase_client.getSubscriptions().forEach(e => supabase_client.removeSubscription(e));
 
-            await supabase_client
-                .from('rooms')
-                .delete()
-                .match({ room_id: client.room_id });
-        }
-
-        console.log(supabase_client);
+        //     await supabase_client
+        //         .from('rooms')
+        //         .delete()
+        //         .match({ room_id: client.room_id });
 
         setClient({ ...client, connected: false, room_id: null, peerConnection: new RTCPeerConnection(client.config) });
         
@@ -502,6 +475,7 @@ export function useHangClient<HangClientProps>(supabase_client: SupabaseClient, 
     }
 
     return { 
+        ws,
         client, 
         createRoom, 
         joinRoom, 

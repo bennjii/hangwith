@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Mic, Speaker, Volume2, X } from "react-feather";
 import styles from '../../styles/Home.module.css'
 import useHangClient, { HangClient, HangClientParent } from "../src/hang_client";
-import { supabase } from '../../public/src/client'
 import DropDown from "./un-ui/dropdown";
 
 const InputModule: React.FC<{ _stream: MediaStream, muted: boolean, depth: number, type: string, client: HangClient, audioCallback?: Function, speakerCallback?: Function, videoCallback?: Function, defaultDevice: string, verificationCallback: Function, v: [number, number, number], hang_client: HangClientParent<null> }> = ({ _stream, muted, depth, type, client, audioCallback, speakerCallback, videoCallback, defaultDevice, verificationCallback, v, hang_client }) => {
