@@ -239,13 +239,16 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
         });
 
         await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response, ref: Query }) => {
-            console.log(payload.response);
+            console.log("CR:: Received Subscription Interval", payload.response);
 
             // TODO: Implement Delete Handling...
             // if(payload.response.type == "delete") {}
             const data = payload.response.content?.Room;
 
+            console.log(data);
+
             if(data?.answer) {
+                console.log("ANSWER");
                 const answer = JSON.parse(data.answer) as RTCSessionDescription;
 
                 if(!client.peerConnection.currentRemoteDescription && data && answer) {
@@ -255,6 +258,7 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
             }
 
             if(data?.callee_candidates) {
+                console.log("CANDIDATES");
                 const candidates = JSON.parse(data.callee_candidates);
                 if(payload.response.type.includes("callee_candidates")) {
                     candidates.forEach((candidate: RTCIceCandidateInit) => {
@@ -310,7 +314,8 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
             }));
 
             await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response, ref: Query }) => {
-                console.log(payload.response);
+                console.log("JR:: Received Subscription Interval", payload.response);
+                
     
                 // TODO: Implement Delete Handling...
                 // if(payload.response.type == "delete") { hangUp(); return; }

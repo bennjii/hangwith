@@ -51,6 +51,8 @@ class RTQueryHandler {
         const data_ = JSON.parse(ev.data);
         console.log("Incoming", data_);
 
+        console.log(subscriptions);
+
         if(data_.type == "update" && subscriptions) subscriptions.find((e) => e.location = data_.location)?.call(data_)
     }
 
@@ -196,7 +198,7 @@ class Query {
                 
                 r({ response: e, ref: this });
 
-                if(this.callback) subscriptions.push({ ...e, location: this.request.query.location, call: this.callback });
+                if(this.callback && e.message !== "404" && e.message !== "406" && this.request.query.qtype == "subscribe") subscriptions.push({ ...e, location: this.request.query.location, call: this.callback });
                 // if(this.callback) this.callback({ response: e, ref: this });
             })
         })
