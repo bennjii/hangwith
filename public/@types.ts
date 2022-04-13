@@ -1,4 +1,4 @@
-import { Query } from "./query"
+import { Query } from "./src/rtq"
 
 type Request = {
     query: {
@@ -34,21 +34,22 @@ export type Subscription = {
 export type Response = {
     type: "error" | "reply" | "update",
     message: "OK" | "200" | "406" | "404", // Error Object
-    content?: {
-        Chat?: {
-            messages: Message[],
-            title: string
-        },
-        Room?: {
-            callee_candidates: string,
-            caller_candidates: string,
-            offer: string,
-            answer: string,
-            id: string
-        }
-    },
+    content?: Chat | Room,
     location?: string,
     nonce: string
+}
+
+export type Room = {
+    callee_candidates: string,
+    caller_candidates: string,
+    offer: string,
+    answer: string,
+    id: string
+}
+
+export type Chat = {
+    messages: Message[],
+    title: string
 }
 
 export type QueryResponse = {

@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { useEffect, useState } from "react";
 import { Query, RTQueryHandler, subscriptions } from "./rtq";
-import { Response } from "../@types";
+import { Response, Room } from "../@types";
 
 export type HangClient = {
     config: any,
@@ -238,12 +238,12 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
             });
         });
 
-        await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response, ref: Query }) => {
+        await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response }) => {
             console.log("CR:: Received Subscription Interval", payload.response);
 
             // TODO: Implement Delete Handling...
             // if(payload.response.type == "delete") {}
-            const data = payload.response.content?.Room;
+            const data = payload.response.content as Room;
 
             console.log(data);
 
@@ -313,13 +313,12 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
                 sdp: answer.sdp,
             }));
 
-            await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response, ref: Query }) => {
+            await new Query(ws).in(room_id).subscribe("all", async (payload: { response: Response }) => {
                 console.log("JR:: Received Subscription Interval", payload.response);
                 
-    
                 // TODO: Implement Delete Handling...
                 // if(payload.response.type == "delete") { hangUp(); return; }
-                const data = payload.response.content?.Room;
+                const data = payload.response.content as Room;
                 if(data?.caller_candidates) {
                     const candidates = JSON.parse(data.caller_candidates);
         

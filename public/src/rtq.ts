@@ -53,7 +53,7 @@ class RTQueryHandler {
 
         console.log(subscriptions);
 
-        if(data_.type == "update" && subscriptions) subscriptions.find((e) => e.location = data_.location)?.call(data_)
+        if(data_.type.includes("update") && subscriptions) subscriptions.find((e) => e.location = data_.location)?.call({ response: data_ })
     }
 
     private wrapQuery(query: Request) {
