@@ -302,8 +302,9 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
                     client.remoteStream.addTrack(track)
                 })
             });
-
-            await client.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.response.content?.Room?.offer as string) as RTCSessionDescriptionInit));
+            
+            //@ts-expect-error
+            await client.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.response.content?.offer as string) as RTCSessionDescriptionInit));
 
             const answer = await client.peerConnection.createAnswer();
             await client.peerConnection.setLocalDescription(answer);

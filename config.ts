@@ -1,5 +1,7 @@
+import { env } from "process";
+
 const config = {
-    webSocketUrl: 'ws://localhost:8000',
+    webSocketUrl: env.RT_URL ? env.RT_URL : "INVALID_URL",
 };
 
 export default config;

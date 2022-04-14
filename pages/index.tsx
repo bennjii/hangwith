@@ -102,7 +102,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 								<></>
 						}
 
-						<p className="flex flex-row items-center gap-2 text-gray-600 text-sm">Want to make a room instead? <a onClick={() => router.push(`./room/${router.query.roomId}`)} className="flex flex-row text-blue-400">Create Room</a></p>
+						<p className="flex flex-row items-center gap-2 text-gray-600 text-sm">Want to join a room instead? <a onClick={() => router.push(`./room/${router.query.roomId}`)} className="flex flex-row text-blue-400">Join Room</a></p>
 					</div>
 
 					<div className="flex flex-col items-center justify-center bg-[#181b20] h-fit p-4 rounded-lg gap-4">

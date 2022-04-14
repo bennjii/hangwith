@@ -24,6 +24,8 @@ class RTQueryHandler {
     };
 
     public init(onstart?: Function) {
+        if(config.webSocketUrl == "INVALID_URL") return false;
+        
         this.ws = new WebSocket(config.webSocketUrl);
 
         this.ws.onmessage = this.handleMessage;

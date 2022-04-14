@@ -10,11 +10,16 @@ function HangWith({ Component, pageProps }: AppProps) {
 	const [ws] = useState(() => isBrowser ? new RTQueryHandler() : null);
 
 	useEffect(() => {
-        ws?.init().then(e => {
-            window.onclose = () => {
-                subscriptions.map(e => new Query(ws).in(e.location).unsubscribe("all", () => {}))
-            }
-        })
+        const init = ws?.init();
+		
+		if(init) {
+			init.then(e => {
+				window.onclose = () => {
+					subscriptions.map(e => new Query(ws as RTQueryHandler).in(e.location).unsubscribe("all", () => {}))
+				}
+			})
+		}
+
 	// eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
