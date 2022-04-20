@@ -182,6 +182,11 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
     }, []);
 
     const createRoom = async (rid?: string) => {  
+        if(!ws) {
+            console.error("Websocket Uninitialized.");
+            return;
+        }
+
         setClient({ ...client, connected: true, peerConnection: new RTCPeerConnection(client.config) });
 
         registerPeerConnectionListeners();
@@ -270,6 +275,11 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
     }
 
     const joinRoom = async (room_id: any) => {  
+        if(!ws) {
+            console.error("Websocket Uninitialized.");
+            return;
+        }
+        
         const data = await new Query(ws).in(room_id).get("all")
 
         if(data) {

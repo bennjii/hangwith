@@ -13,6 +13,7 @@ import InputModule from '../public/components/input_module'
 import { useRouter } from 'next/dist/client/router'
 import { randomUUID } from 'crypto'
 import { Query, RTQueryHandler, subscriptions } from '@public/src/rtq'
+import { env } from 'process'
 
 //@ts-expect-error
 export const HangClientContext = createContext<HangClient>(null);
