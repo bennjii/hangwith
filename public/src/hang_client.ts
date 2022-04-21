@@ -138,7 +138,7 @@ const default_constraints = {
 
 export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration?: any): HangClientParent<HangClientProps> {
     const [ client, setClient ] = useState<HangClient>({
-        config: configuration  ? configuration : default_config,
+        config: configuration ? configuration : default_config,
         //@ts-expect-error
         localStream: null,
         //@ts-expect-error
@@ -248,15 +248,17 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
 
             // TODO: Implement Delete Handling...
             // if(payload.response.type == "delete") {}
-            const data = payload.response.content as Room;
+
+            //@ts-expect-error
+            const data: Room = payload.response.content?.Room ? payload.response.content?.Room : payload.response.content;
 
             console.log(data);
 
             if(data?.answer) {
-                console.log("ANSWER");
+                console.log("ANSWER", data);
                 const answer = JSON.parse(data.answer) as RTCSessionDescription;
 
-                if(!client.peerConnection.currentRemoteDescription && data && answer) {
+                if(!client.peerConnection.currentRemoteDescription && data && answer && payload.response.type.includes("answer")) {
                     const rtcSessionDescription = new RTCSessionDescription(answer);
                     await client.peerConnection.setRemoteDescription(rtcSessionDescription);
                 }
@@ -312,9 +314,12 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
                     client.remoteStream.addTrack(track)
                 })
             });
-            
+
+            console.log(data.response.content);
+
             //@ts-expect-error
-            await client.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(data.response.content?.offer as string) as RTCSessionDescriptionInit));
+            const offer = data.response.content?.Room ? data.response.content?.Room.offer : data.response.content?.offer;
+            await client.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(offer as string) as RTCSessionDescriptionInit));
 
             const answer = await client.peerConnection.createAnswer();
             await client.peerConnection.setLocalDescription(answer);
