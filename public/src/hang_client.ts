@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { useEffect, useState } from "react";
 import { Query, RTQueryHandler, subscriptions } from "./rtq";
 import { Response, Room } from "../@types";
+import { env } from "process";
 
 export type HangClient = {
     config: any,
@@ -110,6 +111,12 @@ export const default_config: Partial<RTCConfiguration> = {
                 "stun:stun4.l.google.com:19302",
             ]
         },
+        {
+            urls: "turn:numb.viagenie.ca",
+            username: process.env.NEXT_PUBLIC_CRED_USN,
+            credentialType: "password",
+            credential: process.env.NEXT_PUBLIC_CRED_PSW
+        }
     ],
     iceCandidatePoolSize: 10,
 };
