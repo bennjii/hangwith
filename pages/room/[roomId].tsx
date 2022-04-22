@@ -57,21 +57,19 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<{ a: any}> }> =
 							_stream={client.localStream} 
 							muted={true}
 							depth={1}
-							show_audio_bar={false}
+							show_audio_bar={true}
+							show_resolution={true}
 							></Camera>
 					</div>
 
 					<div className="w-1/2 bg-[#181b20] min-h-full h-full rounded-lg overflow-hidden">
-						{
-							<Camera 
-								_stream={client.remoteStream} 
-								muted={false}
-								depth={1}
-								show_audio_bar={false}
-								show_resolution={false}
-								></Camera>
-						}
-						
+						<Camera 
+							_stream={client.remoteStream} 
+							muted={false}
+							depth={1}
+							show_audio_bar={true}
+							show_resolution={true}
+						></Camera>
 					</div>
 				</div>
 

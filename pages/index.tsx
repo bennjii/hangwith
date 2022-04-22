@@ -34,7 +34,7 @@ const Home: NextPage<{ id: string, hang_client: HangClientParent<null> }> = ({ i
 	const router = useRouter();
 
 	useEffect(() => {
-		console.log("Client update propogated", client);
+		console.log("Client update propagated", client);
 	}, [client]);
 
 	const [ verified, setVerified ] = useState<[number, number, number]>([0,0,0]);
