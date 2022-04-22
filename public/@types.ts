@@ -2,7 +2,7 @@ import { Query } from "./src/rtq"
 
 type Request = {
     query: {
-        qtype: "get" | "set" | "set.room" | "init" | "update" | "subscribe" | "unsubscribe", 
+        qtype: "get" | "set" | "set.room" | "delete" |"init" | "update" | "subscribe" | "unsubscribe", 
         message: string,
         location: string,
         limiter?: {

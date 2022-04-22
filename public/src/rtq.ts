@@ -165,6 +165,13 @@ class Query {
         return this.sendOff();
     }
 
+    delete() {
+        this.request.query.qtype = "delete";
+        this.request.query.message = "*";
+
+        return this.sendOff();
+    }
+
     /**
      * 
      * @param message Indicates the parameter being changed. format: [property].[new_value]

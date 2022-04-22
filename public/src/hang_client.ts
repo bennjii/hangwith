@@ -359,10 +359,7 @@ export function useHangClient<HangClientProps>(ws: RTQueryHandler, configuration
         if (client.remoteStream)   client.remoteStream.getTracks().forEach(track => track.stop());
         if (client.peerConnection) client.peerConnection.close();
 
-        //     await supabase_client
-        //         .from('rooms')
-        //         .delete()
-        //         .match({ room_id: client.room_id });
+        await new Query(ws).in(client.room_id).delete();
 
         setClient({ ...client, connected: false, room_id: null, peerConnection: new RTCPeerConnection(client.config) });
         
