@@ -4,7 +4,7 @@ The Hangwith API is a [WebRTC](https://webrtc.org/) layer built using [supabase]
 
 With incredibly easy integration, connecting users to a call is as simple as:
 
-```
+```tsx
 const { createRoom } = useHangClient(supabase);
 
 return (
