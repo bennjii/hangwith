@@ -112,10 +112,9 @@ export const default_config: Partial<RTCConfiguration> = {
             ]
         },
         {
-            urls: "turn:numb.viagenie.ca",
-            username: process.env.NEXT_PUBLIC_CRED_USN,
-            credentialType: "password",
-            credential: process.env.NEXT_PUBLIC_CRED_PSW
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credentials: 'openrelayproject'
         }
     ],
     iceCandidatePoolSize: 10,
